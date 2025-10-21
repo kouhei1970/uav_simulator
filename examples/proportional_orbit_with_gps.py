@@ -134,7 +134,7 @@ def main():
         Va = uav.get_airspeed()
 
         # GPS measurement
-        gps_position = gps_sensor.measure(position, time)
+        gps_position, valid = gps_sensor.measure(position, time)
 
         # Update orbit center estimate
         orbit_estimator.update(gps_position, time)
@@ -294,7 +294,10 @@ def main():
     ax2 = fig1.add_subplot(222)
     times = np.array(viz.time_history)
     error_times = times[int(warmup_time/(dt*10)):]  # Skip warmup
-    ax2.plot(error_times, radius_errors, 'b-', linewidth=1.5, label='Radius error')
+    # Ensure arrays have same length
+    n_errors = min(len(error_times), len(radius_errors))
+    error_times = error_times[:n_errors]
+    ax2.plot(error_times, radius_errors[:n_errors], 'b-', linewidth=1.5, label='Radius error')
     ax2.axhline(y=0, color='k', linestyle='--', linewidth=1)
     ax2.fill_between(error_times, -2, 2, alpha=0.2, color='g', label='±2m tolerance')
     ax2.set_xlabel('Time [s]')
@@ -305,9 +308,10 @@ def main():
 
     # Bank angle components
     ax3 = fig1.add_subplot(223)
-    ax3.plot(error_times, np.rad2deg(feedforward_angles), 'g-', linewidth=1.5, label='Feedforward (φ_ff)')
-    ax3.plot(error_times, np.rad2deg(proportional_angles), 'r-', linewidth=1.5, label='Proportional (K_p*e_r)')
-    ax3.plot(error_times, np.rad2deg(bank_angles), 'b-', linewidth=2, label='Total (φ_c)', alpha=0.7)
+    n_bank = min(len(error_times), len(feedforward_angles), len(proportional_angles), len(bank_angles))
+    ax3.plot(error_times[:n_bank], np.rad2deg(feedforward_angles[:n_bank]), 'g-', linewidth=1.5, label='Feedforward (φ_ff)')
+    ax3.plot(error_times[:n_bank], np.rad2deg(proportional_angles[:n_bank]), 'r-', linewidth=1.5, label='Proportional (K_p*e_r)')
+    ax3.plot(error_times[:n_bank], np.rad2deg(bank_angles[:n_bank]), 'b-', linewidth=2, label='Total (φ_c)', alpha=0.7)
     ax3.axhline(y=0, color='k', linestyle='--', linewidth=1)
     ax3.set_xlabel('Time [s]')
     ax3.set_ylabel('Bank Angle [deg]')

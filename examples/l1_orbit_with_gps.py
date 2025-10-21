@@ -135,7 +135,7 @@ def main():
         chi = np.arctan2(v, u)
 
         # GPS measurement
-        gps_position = gps_sensor.measure(position, time)
+        gps_position, valid = gps_sensor.measure(position, time)
 
         # Update orbit center estimate
         orbit_estimator.update(gps_position, time)

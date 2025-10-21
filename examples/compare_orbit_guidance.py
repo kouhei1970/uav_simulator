@@ -118,7 +118,7 @@ def simulate_orbit_guidance(method='proportional', gps_seed=42, verbose=False):
         chi = np.arctan2(v, u)
 
         # GPS measurement
-        gps_position = gps_sensor.measure(position, time)
+        gps_position, valid = gps_sensor.measure(position, time)
         orbit_estimator.update(gps_position, time)
         estimated_center = orbit_estimator.get_center()
         estimated_radius = orbit_estimator.get_radius()
@@ -269,9 +269,12 @@ def main():
     ax2 = fig.add_subplot(232)
     warmup_idx = int(results_prop['warmup_time'] / 0.1)
     times_plot = results_prop['times'][warmup_idx:]
-    ax2.plot(times_plot, results_prop['radius_errors'], 'b-', linewidth=1.5,
+    # Ensure arrays have same length
+    n_errors = min(len(times_plot), len(results_prop['radius_errors']), len(results_l1['radius_errors']))
+    times_plot = times_plot[:n_errors]
+    ax2.plot(times_plot, results_prop['radius_errors'][:n_errors], 'b-', linewidth=1.5,
              label='Proportional', alpha=0.8)
-    ax2.plot(times_plot, results_l1['radius_errors'], 'r-', linewidth=1.5,
+    ax2.plot(times_plot, results_l1['radius_errors'][:n_errors], 'r-', linewidth=1.5,
              label='L1', alpha=0.8)
     ax2.axhline(y=0, color='k', linestyle='--', linewidth=1)
     ax2.fill_between(times_plot, -2, 2, alpha=0.1, color='g', label='±2m tolerance')
@@ -283,9 +286,10 @@ def main():
 
     # Bank angles comparison
     ax3 = fig.add_subplot(233)
-    ax3.plot(times_plot, np.rad2deg(results_prop['bank_angles']), 'b-',
+    n_bank = min(len(times_plot), len(results_prop['bank_angles']), len(results_l1['bank_angles']))
+    ax3.plot(times_plot[:n_bank], np.rad2deg(results_prop['bank_angles'][:n_bank]), 'b-',
              linewidth=1.5, label='Proportional', alpha=0.8)
-    ax3.plot(times_plot, np.rad2deg(results_l1['bank_angles']), 'r-',
+    ax3.plot(times_plot[:n_bank], np.rad2deg(results_l1['bank_angles'][:n_bank]), 'r-',
              linewidth=1.5, label='L1', alpha=0.8)
     ax3.set_xlabel('Time [s]')
     ax3.set_ylabel('Bank Angle [deg]')
@@ -309,10 +313,11 @@ def main():
 
     # Control effort comparison
     ax5 = fig.add_subplot(235)
-    ax5.plot(times_plot, np.rad2deg(results_prop['control_outputs']), 'b-',
+    n_control = min(len(times_plot), len(results_prop['control_outputs']), len(results_l1['control_outputs']))
+    ax5.plot(times_plot[:n_control], np.rad2deg(results_prop['control_outputs'][:n_control]), 'b-',
              linewidth=1.5, label='Proportional (φ_p)', alpha=0.8)
     ax5_twin = ax5.twinx()
-    ax5_twin.plot(times_plot, results_l1['control_outputs'], 'r-',
+    ax5_twin.plot(times_plot[:n_control], results_l1['control_outputs'][:n_control], 'r-',
                   linewidth=1.5, label='L1 (a_cmd)', alpha=0.8)
     ax5.set_xlabel('Time [s]')
     ax5.set_ylabel('Proportional Component [deg]', color='b')
