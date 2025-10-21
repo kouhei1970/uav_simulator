@@ -142,7 +142,10 @@ def main():
 
         # Record data
         if step % 10 == 0:  # Record every 0.1 seconds
-            viz.add_data(time, uav.get_state(), control)
+            # Create command vector: [phi_c, theta_c, psi_c, p_c, q_c, r_c]
+            # We only have phi_c from orbit guidance
+            command = np.array([phi_c, 0.0, 0.0, 0.0, 0.0, 0.0])
+            viz.add_data(time, uav.get_state(), control, command=command)
 
         # Progress display
         if step % 1000 == 0:
