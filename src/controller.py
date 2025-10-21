@@ -178,6 +178,134 @@ class AttitudeController:
         self.sideslip_controller.reset()
 
 
+class CascadeAttitudeController:
+    """完全なカスケードPID姿勢制御器
+
+    ロール、ピッチ、ヨーの3軸すべてでカスケード制御を実装:
+    - アウターループ: 角度制御
+    - インナーループ: 角速度制御
+    """
+
+    def __init__(self):
+        """カスケード姿勢制御器の初期化"""
+        # ロール角制御用PID (アウターループ)
+        self.roll_angle_controller = PIDController(
+            kp=5.0,
+            ki=0.2,
+            kd=0.8,
+            limit=(-2.0, 2.0)  # ロールレート指令制限 [rad/s]
+        )
+
+        # ロールレート制御用PID (インナーループ)
+        self.roll_rate_controller = PIDController(
+            kp=0.15,
+            ki=0.01,
+            kd=0.02,
+            limit=(-0.4, 0.4)  # エルロン制限 [rad]
+        )
+
+        # ピッチ角制御用PID (アウターループ)
+        self.pitch_angle_controller = PIDController(
+            kp=0.3,
+            ki=0.0,
+            kd=0.05,
+            limit=(-0.5, 0.5)  # ピッチレート指令制限 [rad/s]
+        )
+
+        # ピッチレート制御用PID (インナーループ)
+        self.pitch_rate_controller = PIDController(
+            kp=0.08,
+            ki=0.005,
+            kd=0.015,
+            limit=(-0.25, 0.25)  # エレベータ制限 [rad]
+        )
+
+        # ヨー角制御用PID (アウターループ)
+        self.yaw_angle_controller = PIDController(
+            kp=0.5,
+            ki=0.02,
+            kd=0.1,
+            limit=(-1.0, 1.0)  # ヨーレート指令制限 [rad/s]
+        )
+
+        # ヨーレート制御用PID (インナーループ)
+        self.yaw_rate_controller = PIDController(
+            kp=0.08,
+            ki=0.005,
+            kd=0.015,
+            limit=(-0.4, 0.4)  # ラダー制限 [rad]
+        )
+
+    def compute_control(self, uav, phi_c, theta_c, psi_c, dt):
+        """
+        カスケードPID姿勢制御入力を計算
+
+        パラメータ:
+            uav: FixedWingUAVオブジェクト
+            phi_c: 目標ロール角 [rad]
+            theta_c: 目標ピッチ角 [rad]
+            psi_c: 目標ヨー角 [rad]
+            dt: 時間ステップ [s]
+
+        戻り値:
+            delta_a: エルロン偏角 [rad]
+            delta_e: エレベータ偏角 [rad]
+            delta_r: ラダー偏角 [rad]
+            p_c: 目標ロールレート [rad/s]
+            q_c: 目標ピッチレート [rad/s]
+            r_c: 目標ヨーレート [rad/s]
+        """
+        # 現在の姿勢と角速度
+        phi, theta, psi = uav.get_attitude()
+        p, q, r = uav.get_angular_velocity()
+
+        # ロール角カスケード制御
+        # アウターループ: 角度誤差 → 目標角速度
+        phi_error = self._wrap_angle(phi_c - phi)
+        p_c = self.roll_angle_controller.update(phi_error, dt)
+
+        # インナーループ: 角速度誤差 → 舵角
+        p_error = p_c - p
+        delta_a = self.roll_rate_controller.update(p_error, dt)
+
+        # ピッチ角カスケード制御
+        # アウターループ: 角度誤差 → 目標角速度
+        theta_error = self._wrap_angle(theta_c - theta)
+        q_c = self.pitch_angle_controller.update(theta_error, dt)
+
+        # インナーループ: 角速度誤差 → 舵角
+        q_error = q_c - q
+        delta_e = self.pitch_rate_controller.update(q_error, dt)
+
+        # ヨー角カスケード制御
+        # アウターループ: 角度誤差 → 目標角速度
+        psi_error = self._wrap_angle(psi_c - psi)
+        r_c = self.yaw_angle_controller.update(psi_error, dt)
+
+        # インナーループ: 角速度誤差 → 舵角
+        r_error = r_c - r
+        delta_r = self.yaw_rate_controller.update(r_error, dt)
+
+        return delta_a, delta_e, delta_r, p_c, q_c, r_c
+
+    def _wrap_angle(self, angle):
+        """角度を±π範囲にラップ"""
+        while angle > np.pi:
+            angle -= 2 * np.pi
+        while angle < -np.pi:
+            angle += 2 * np.pi
+        return angle
+
+    def reset(self):
+        """全てのPIDコントローラをリセット"""
+        self.roll_angle_controller.reset()
+        self.roll_rate_controller.reset()
+        self.pitch_angle_controller.reset()
+        self.pitch_rate_controller.reset()
+        self.yaw_angle_controller.reset()
+        self.yaw_rate_controller.reset()
+
+
 class AltitudeController:
     """高度制御器"""
 
