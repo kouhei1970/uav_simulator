@@ -1,7 +1,7 @@
 """
-シミュレーション結果の可視化ツール
+Visualization tools for simulation results
 
-3D軌跡、状態プロット、アニメーションなど
+3D trajectory, state plots, animations, etc.
 """
 
 import numpy as np
@@ -10,22 +10,22 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 class SimulationVisualizer:
-    """シミュレーション結果の可視化"""
+    """Visualization of simulation results"""
 
     def __init__(self):
-        """可視化の初期化"""
+        """Initialize visualizer"""
         self.time_history = []
         self.state_history = []
         self.control_history = []
 
     def add_data(self, time, state, control):
         """
-        データを追加
+        Add data point
 
-        パラメータ:
-            time: 時刻 [s]
-            state: 状態ベクトル
-            control: 制御入力ベクトル
+        Parameters:
+            time: Time [s]
+            state: State vector
+            control: Control input vector
         """
         self.time_history.append(time)
         self.state_history.append(state.copy())
@@ -33,37 +33,37 @@ class SimulationVisualizer:
 
     def plot_3d_trajectory(self, waypoints=None):
         """
-        3D軌跡をプロット
+        Plot 3D trajectory
 
-        パラメータ:
-            waypoints: 経路点のリスト(オプション)
+        Parameters:
+            waypoints: List of waypoints (optional)
         """
         if len(self.state_history) == 0:
-            print("データがありません")
+            print("No data available")
             return
 
         states = np.array(self.state_history)
         x = states[:, 0]
         y = states[:, 1]
-        z = -states[:, 2]  # 高度を正の値で表示
+        z = -states[:, 2]  # Display altitude as positive
 
         fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111, projection='3d')
 
-        # 軌跡をプロット
-        ax.plot(x, y, z, 'b-', linewidth=2, label='軌跡')
-        ax.plot([x[0]], [y[0]], [z[0]], 'go', markersize=10, label='開始点')
-        ax.plot([x[-1]], [y[-1]], [z[-1]], 'ro', markersize=10, label='終了点')
+        # Plot trajectory
+        ax.plot(x, y, z, 'b-', linewidth=2, label='Trajectory')
+        ax.plot([x[0]], [y[0]], [z[0]], 'go', markersize=10, label='Start')
+        ax.plot([x[-1]], [y[-1]], [z[-1]], 'ro', markersize=10, label='End')
 
-        # 経路点をプロット
+        # Plot waypoints
         if waypoints is not None:
             wp = np.array(waypoints)
-            ax.plot(wp[:, 0], wp[:, 1], -wp[:, 2], 'r*', markersize=15, label='経路点')
+            ax.plot(wp[:, 0], wp[:, 1], -wp[:, 2], 'r*', markersize=15, label='Waypoints')
 
-        ax.set_xlabel('北 [m]')
-        ax.set_ylabel('東 [m]')
-        ax.set_zlabel('高度 [m]')
-        ax.set_title('3D飛行軌跡')
+        ax.set_xlabel('North [m]')
+        ax.set_ylabel('East [m]')
+        ax.set_zlabel('Altitude [m]')
+        ax.set_title('3D Flight Trajectory')
         ax.legend()
         ax.grid(True)
 
@@ -71,9 +71,9 @@ class SimulationVisualizer:
         plt.show()
 
     def plot_states(self):
-        """状態変数の時系列をプロット"""
+        """Plot state time series"""
         if len(self.state_history) == 0:
-            print("データがありません")
+            print("No data available")
             return
 
         times = np.array(self.time_history)
@@ -81,80 +81,80 @@ class SimulationVisualizer:
 
         fig, axes = plt.subplots(4, 3, figsize=(15, 12))
 
-        # 位置
+        # Position
         axes[0, 0].plot(times, states[:, 0])
         axes[0, 0].set_ylabel('x [m]')
-        axes[0, 0].set_title('北方向位置')
+        axes[0, 0].set_title('North Position')
         axes[0, 0].grid(True)
 
         axes[0, 1].plot(times, states[:, 1])
         axes[0, 1].set_ylabel('y [m]')
-        axes[0, 1].set_title('東方向位置')
+        axes[0, 1].set_title('East Position')
         axes[0, 1].grid(True)
 
         axes[0, 2].plot(times, -states[:, 2])
-        axes[0, 2].set_ylabel('高度 [m]')
-        axes[0, 2].set_title('高度')
+        axes[0, 2].set_ylabel('Altitude [m]')
+        axes[0, 2].set_title('Altitude')
         axes[0, 2].grid(True)
 
-        # 速度
+        # Velocity
         axes[1, 0].plot(times, states[:, 3])
         axes[1, 0].set_ylabel('u [m/s]')
-        axes[1, 0].set_title('前進速度')
+        axes[1, 0].set_title('Forward Velocity')
         axes[1, 0].grid(True)
 
         axes[1, 1].plot(times, states[:, 4])
         axes[1, 1].set_ylabel('v [m/s]')
-        axes[1, 1].set_title('横方向速度')
+        axes[1, 1].set_title('Lateral Velocity')
         axes[1, 1].grid(True)
 
         axes[1, 2].plot(times, states[:, 5])
         axes[1, 2].set_ylabel('w [m/s]')
-        axes[1, 2].set_title('下方向速度')
+        axes[1, 2].set_title('Vertical Velocity')
         axes[1, 2].grid(True)
 
-        # 姿勢
+        # Attitude
         axes[2, 0].plot(times, np.rad2deg(states[:, 6]))
         axes[2, 0].set_ylabel('φ [deg]')
-        axes[2, 0].set_title('ロール角')
+        axes[2, 0].set_title('Roll Angle')
         axes[2, 0].grid(True)
 
         axes[2, 1].plot(times, np.rad2deg(states[:, 7]))
         axes[2, 1].set_ylabel('θ [deg]')
-        axes[2, 1].set_title('ピッチ角')
+        axes[2, 1].set_title('Pitch Angle')
         axes[2, 1].grid(True)
 
         axes[2, 2].plot(times, np.rad2deg(states[:, 8]))
         axes[2, 2].set_ylabel('ψ [deg]')
-        axes[2, 2].set_title('ヨー角')
+        axes[2, 2].set_title('Yaw Angle')
         axes[2, 2].grid(True)
 
-        # 角速度
+        # Angular velocity
         axes[3, 0].plot(times, np.rad2deg(states[:, 9]))
         axes[3, 0].set_ylabel('p [deg/s]')
-        axes[3, 0].set_xlabel('時間 [s]')
-        axes[3, 0].set_title('ロールレート')
+        axes[3, 0].set_xlabel('Time [s]')
+        axes[3, 0].set_title('Roll Rate')
         axes[3, 0].grid(True)
 
         axes[3, 1].plot(times, np.rad2deg(states[:, 10]))
         axes[3, 1].set_ylabel('q [deg/s]')
-        axes[3, 1].set_xlabel('時間 [s]')
-        axes[3, 1].set_title('ピッチレート')
+        axes[3, 1].set_xlabel('Time [s]')
+        axes[3, 1].set_title('Pitch Rate')
         axes[3, 1].grid(True)
 
         axes[3, 2].plot(times, np.rad2deg(states[:, 11]))
         axes[3, 2].set_ylabel('r [deg/s]')
-        axes[3, 2].set_xlabel('時間 [s]')
-        axes[3, 2].set_title('ヨーレート')
+        axes[3, 2].set_xlabel('Time [s]')
+        axes[3, 2].set_title('Yaw Rate')
         axes[3, 2].grid(True)
 
         plt.tight_layout()
         plt.show()
 
     def plot_controls(self):
-        """制御入力の時系列をプロット"""
+        """Plot control input time series"""
         if len(self.control_history) == 0:
-            print("データがありません")
+            print("No data available")
             return
 
         times = np.array(self.time_history)
@@ -162,30 +162,30 @@ class SimulationVisualizer:
 
         fig, axes = plt.subplots(2, 2, figsize=(12, 8))
 
-        # エレベータ
+        # Elevator
         axes[0, 0].plot(times, np.rad2deg(controls[:, 0]))
         axes[0, 0].set_ylabel('δe [deg]')
-        axes[0, 0].set_title('エレベータ')
+        axes[0, 0].set_title('Elevator')
         axes[0, 0].grid(True)
 
-        # エルロン
+        # Aileron
         axes[0, 1].plot(times, np.rad2deg(controls[:, 1]))
         axes[0, 1].set_ylabel('δa [deg]')
-        axes[0, 1].set_title('エルロン')
+        axes[0, 1].set_title('Aileron')
         axes[0, 1].grid(True)
 
-        # ラダー
+        # Rudder
         axes[1, 0].plot(times, np.rad2deg(controls[:, 2]))
         axes[1, 0].set_ylabel('δr [deg]')
-        axes[1, 0].set_xlabel('時間 [s]')
-        axes[1, 0].set_title('ラダー')
+        axes[1, 0].set_xlabel('Time [s]')
+        axes[1, 0].set_title('Rudder')
         axes[1, 0].grid(True)
 
-        # スロットル
+        # Throttle
         axes[1, 1].plot(times, controls[:, 3])
         axes[1, 1].set_ylabel('δt [-]')
-        axes[1, 1].set_xlabel('時間 [s]')
-        axes[1, 1].set_title('スロットル')
+        axes[1, 1].set_xlabel('Time [s]')
+        axes[1, 1].set_title('Throttle')
         axes[1, 1].set_ylim([-0.1, 1.1])
         axes[1, 1].grid(True)
 
@@ -193,15 +193,15 @@ class SimulationVisualizer:
         plt.show()
 
     def plot_airdata(self):
-        """対気データの時系列をプロット"""
+        """Plot airdata time series"""
         if len(self.state_history) == 0:
-            print("データがありません")
+            print("No data available")
             return
 
         times = np.array(self.time_history)
         states = np.array(self.state_history)
 
-        # 対気速度、迎角、横滑り角を計算
+        # Calculate airspeed, angle of attack, sideslip angle
         Va_list = []
         alpha_list = []
         beta_list = []
@@ -225,23 +225,23 @@ class SimulationVisualizer:
 
         fig, axes = plt.subplots(3, 1, figsize=(10, 9))
 
-        # 対気速度
+        # Airspeed
         axes[0].plot(times, Va_arr)
         axes[0].set_ylabel('Va [m/s]')
-        axes[0].set_title('対気速度')
+        axes[0].set_title('Airspeed')
         axes[0].grid(True)
 
-        # 迎角
+        # Angle of attack
         axes[1].plot(times, alpha_arr)
         axes[1].set_ylabel('α [deg]')
-        axes[1].set_title('迎角')
+        axes[1].set_title('Angle of Attack')
         axes[1].grid(True)
 
-        # 横滑り角
+        # Sideslip angle
         axes[2].plot(times, beta_arr)
         axes[2].set_ylabel('β [deg]')
-        axes[2].set_xlabel('時間 [s]')
-        axes[2].set_title('横滑り角')
+        axes[2].set_xlabel('Time [s]')
+        axes[2].set_title('Sideslip Angle')
         axes[2].grid(True)
 
         plt.tight_layout()
@@ -249,15 +249,15 @@ class SimulationVisualizer:
 
     def plot_2d_trajectory(self, waypoints=None, orbit_center=None, orbit_radius=None):
         """
-        2D軌跡をプロット(上面図)
+        Plot 2D trajectory (top view)
 
-        パラメータ:
-            waypoints: 経路点のリスト(オプション)
-            orbit_center: 旋回中心(オプション)
-            orbit_radius: 旋回半径(オプション)
+        Parameters:
+            waypoints: List of waypoints (optional)
+            orbit_center: Orbit center (optional)
+            orbit_radius: Orbit radius (optional)
         """
         if len(self.state_history) == 0:
-            print("データがありません")
+            print("No data available")
             return
 
         states = np.array(self.state_history)
@@ -266,27 +266,27 @@ class SimulationVisualizer:
 
         fig, ax = plt.subplots(figsize=(10, 10))
 
-        # 軌跡をプロット
-        ax.plot(x, y, 'b-', linewidth=2, label='軌跡')
-        ax.plot(x[0], y[0], 'go', markersize=10, label='開始点')
-        ax.plot(x[-1], y[-1], 'ro', markersize=10, label='終了点')
+        # Plot trajectory
+        ax.plot(x, y, 'b-', linewidth=2, label='Trajectory')
+        ax.plot(x[0], y[0], 'go', markersize=10, label='Start')
+        ax.plot(x[-1], y[-1], 'ro', markersize=10, label='End')
 
-        # 経路点をプロット
+        # Plot waypoints
         if waypoints is not None:
             wp = np.array(waypoints)
-            ax.plot(wp[:, 0], wp[:, 1], 'r*', markersize=15, label='経路点')
-            # 経路点間を線で結ぶ
+            ax.plot(wp[:, 0], wp[:, 1], 'r*', markersize=15, label='Waypoints')
+            # Connect waypoints with lines
             ax.plot(wp[:, 0], wp[:, 1], 'r--', alpha=0.5, linewidth=1)
 
-        # 旋回円をプロット
+        # Plot orbit circle
         if orbit_center is not None and orbit_radius is not None:
             circle = plt.Circle((orbit_center[0], orbit_center[1]), orbit_radius,
-                              color='r', fill=False, linestyle='--', linewidth=2, label='目標旋回円')
+                              color='r', fill=False, linestyle='--', linewidth=2, label='Target Orbit')
             ax.add_patch(circle)
 
-        ax.set_xlabel('北 [m]')
-        ax.set_ylabel('東 [m]')
-        ax.set_title('2D飛行軌跡(上面図)')
+        ax.set_xlabel('North [m]')
+        ax.set_ylabel('East [m]')
+        ax.set_title('2D Flight Trajectory (Top View)')
         ax.legend()
         ax.grid(True)
         ax.axis('equal')
@@ -296,10 +296,10 @@ class SimulationVisualizer:
 
     def save_data(self, filename):
         """
-        データをファイルに保存
+        Save data to file
 
-        パラメータ:
-            filename: 保存するファイル名
+        Parameters:
+            filename: Filename to save
         """
         data = {
             'time': np.array(self.time_history),
@@ -307,23 +307,23 @@ class SimulationVisualizer:
             'controls': np.array(self.control_history)
         }
         np.savez(filename, **data)
-        print(f"データを{filename}に保存しました")
+        print(f"Data saved to {filename}")
 
     def load_data(self, filename):
         """
-        データをファイルから読み込み
+        Load data from file
 
-        パラメータ:
-            filename: 読み込むファイル名
+        Parameters:
+            filename: Filename to load
         """
         data = np.load(filename)
         self.time_history = data['time'].tolist()
         self.state_history = data['states'].tolist()
         self.control_history = data['controls'].tolist()
-        print(f"データを{filename}から読み込みました")
+        print(f"Data loaded from {filename}")
 
     def reset(self):
-        """履歴をリセット"""
+        """Reset history"""
         self.time_history = []
         self.state_history = []
         self.control_history = []

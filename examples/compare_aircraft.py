@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-複数機体の比較シミュレーション
+Multi-Aircraft Comparison Simulation
 
-異なる機体タイプの飛行特性を比較
+Compare flight characteristics of different aircraft types
 """
 
 import sys
@@ -19,20 +19,20 @@ from src.visualization import SimulationVisualizer
 
 def simulate_aircraft(aircraft_type, target_altitude=-100.0, target_speed=None, sim_time=60.0):
     """
-    指定された機体タイプでシミュレーション
+    Simulate with specified aircraft type
 
-    パラメータ:
-        aircraft_type: 機体タイプ ('small', 'medium', 'micro', 'large')
-        target_altitude: 目標高度 [m]
-        target_speed: 目標速度 [m/s] (Noneの場合は機体サイズに応じて自動設定)
-        sim_time: シミュレーション時間 [s]
+    Parameters:
+        aircraft_type: Aircraft type ('small', 'medium', 'micro', 'large')
+        target_altitude: Target altitude [m]
+        target_speed: Target airspeed [m/s] (auto-set based on aircraft size if None)
+        sim_time: Simulation time [s]
 
-    戻り値:
-        viz: SimulationVisualizerオブジェクト
+    Returns:
+        viz: SimulationVisualizer object
     """
-    print(f"\n=== {aircraft_type.upper()} UAV シミュレーション ===")
+    print(f"\n=== {aircraft_type.upper()} UAV Simulation ===")
 
-    # 機体サイズに応じた目標速度の設定
+    # Set target speed based on aircraft size
     if target_speed is None:
         speed_map = {
             'micro': 15.0,
@@ -42,84 +42,84 @@ def simulate_aircraft(aircraft_type, target_altitude=-100.0, target_speed=None, 
         }
         target_speed = speed_map.get(aircraft_type, 25.0)
 
-    # UAVの初期化
+    # Initialize UAV
     uav = FixedWingUAV(aircraft_type=aircraft_type)
     uav.set_state([0, 0, target_altitude, target_speed, 0, 0, 0, 0, 0, 0, 0, 0])
 
-    # 空力モデル
+    # Aerodynamic model
     aero = AerodynamicModel(aircraft_type=aircraft_type)
 
-    # 制御器の初期化
+    # Initialize controllers
     attitude_controller = AttitudeController()
     altitude_controller = AltitudeController()
     airspeed_controller = AirspeedController()
 
-    # 可視化
+    # Visualization
     viz = SimulationVisualizer()
 
-    # 機体情報を表示
-    print(f"質量: {uav.params['mass']:.2f} kg")
-    print(f"翼幅: {uav.params['b']:.2f} m")
-    print(f"翼面積: {uav.params['S_wing']:.3f} m^2")
-    print(f"目標速度: {target_speed:.1f} m/s")
+    # Display aircraft information
+    print(f"Mass: {uav.params['mass']:.2f} kg")
+    print(f"Wingspan: {uav.params['b']:.2f} m")
+    print(f"Wing Area: {uav.params['S_wing']:.3f} m^2")
+    print(f"Target airspeed: {target_speed:.1f} m/s")
 
-    # シミュレーションパラメータ
-    dt = 0.01  # 時間ステップ [s]
+    # Simulation parameters
+    dt = 0.01  # Time step [s]
 
-    # 目標値
-    h_c = target_altitude - 50.0  # さらに50m上昇
+    # Target values
+    h_c = target_altitude - 50.0  # Climb 50m more
     Va_c = target_speed
 
-    # シミュレーションループ
+    # Simulation loop
     time = 0.0
     step = 0
 
     while time < sim_time:
-        # 現在の状態
+        # Current state
         position = uav.get_position()
         phi, theta, psi = uav.get_attitude()
         Va = uav.get_airspeed()
 
-        # 高度制御でピッチ角指令を生成
+        # Generate pitch command from altitude controller
         theta_c = altitude_controller.compute_pitch_command(uav, h_c, dt)
 
-        # 速度制御でスロットル指令を生成
+        # Generate throttle command from airspeed controller
         delta_t = airspeed_controller.compute_throttle_command(uav, Va_c, dt)
 
-        # 姿勢制御で舵面指令を生成
-        phi_c = 0.0  # 水平飛行
+        # Generate control surface commands from attitude controller
+        phi_c = 0.0  # Level flight
         delta_a, delta_e, delta_r = attitude_controller.compute_control(uav, phi_c, theta_c, dt)
 
-        # 制御入力を設定
+        # Set control inputs
         control = np.array([delta_e, delta_a, delta_r, delta_t])
         uav.set_control(control)
 
-        # 空力力とモーメントを計算
+        # Calculate aerodynamic forces and moments
         forces_moments = aero.compute_forces_moments(uav, control)
 
-        # 状態を更新
+        # Update state
         uav.update(dt, forces_moments)
 
-        # データを記録
-        if step % 10 == 0:  # 0.1秒ごとに記録
+        # Record data
+        if step % 10 == 0:  # Record every 0.1 seconds
             viz.add_data(time, uav.get_state(), control)
 
         time += dt
         step += 1
 
-    print(f"最終高度: {-position[2]:.1f} m")
-    print(f"最終速度: {Va:.1f} m/s")
+    print(f"Final altitude: {-position[2]:.1f} m")
+    print(f"Final airspeed: {Va:.1f} m/s")
 
     return viz
 
 
 def main():
-    print("=== 複数機体の比較シミュレーション ===")
+    print("=== Multi-Aircraft Comparison Simulation ===")
 
-    # シミュレーション時間
+    # Simulation time
     sim_time = 60.0
 
-    # 各機体タイプでシミュレーション
+    # Simulate each aircraft type
     aircraft_types = ['micro', 'small', 'medium', 'large']
     results = {}
 
@@ -127,10 +127,10 @@ def main():
         viz = simulate_aircraft(aircraft_type, target_altitude=-100.0, sim_time=sim_time)
         results[aircraft_type] = viz
 
-    # 結果の比較プロット
-    print("\n結果を比較プロット中...")
+    # Plot comparison results
+    print("\nPlotting comparison results...")
 
-    # 3D軌跡の比較
+    # 3D trajectory comparison
     fig = plt.figure(figsize=(15, 10))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -140,29 +140,29 @@ def main():
         states = np.array(viz.state_history)
         x = states[:, 0]
         y = states[:, 1]
-        z = -states[:, 2]  # 高度を正の値で表示
+        z = -states[:, 2]  # Display altitude as positive
         ax.plot(x, y, z, colors[aircraft_type], linewidth=2, label=aircraft_type.upper())
 
-    ax.set_xlabel('北 [m]')
-    ax.set_ylabel('東 [m]')
-    ax.set_zlabel('高度 [m]')
-    ax.set_title('機体タイプ別 3D飛行軌跡比較')
+    ax.set_xlabel('North [m]')
+    ax.set_ylabel('East [m]')
+    ax.set_zlabel('Altitude [m]')
+    ax.set_title('3D Flight Trajectory Comparison by Aircraft Type')
     ax.legend()
     ax.grid(True)
     plt.tight_layout()
 
-    # 高度と速度の時系列比較
+    # Time series comparison of altitude and airspeed
     fig, axes = plt.subplots(2, 1, figsize=(12, 8))
 
     for aircraft_type, viz in results.items():
         times = np.array(viz.time_history)
         states = np.array(viz.state_history)
 
-        # 高度
+        # Altitude
         altitude = -states[:, 2]
         axes[0].plot(times, altitude, colors[aircraft_type], linewidth=2, label=aircraft_type.upper())
 
-        # 対気速度
+        # Airspeed
         Va_list = []
         for state in states:
             u, v, w = state[3:6]
@@ -170,14 +170,14 @@ def main():
             Va_list.append(Va)
         axes[1].plot(times, Va_list, colors[aircraft_type], linewidth=2, label=aircraft_type.upper())
 
-    axes[0].set_ylabel('高度 [m]')
-    axes[0].set_title('高度比較')
+    axes[0].set_ylabel('Altitude [m]')
+    axes[0].set_title('Altitude Comparison')
     axes[0].legend()
     axes[0].grid(True)
 
-    axes[1].set_ylabel('対気速度 [m/s]')
-    axes[1].set_xlabel('時間 [s]')
-    axes[1].set_title('対気速度比較')
+    axes[1].set_ylabel('Airspeed [m/s]')
+    axes[1].set_xlabel('Time [s]')
+    axes[1].set_title('Airspeed Comparison')
     axes[1].legend()
     axes[1].grid(True)
 

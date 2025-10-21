@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-基本的な飛行シミュレーション
+Basic Flight Simulation
 
-姿勢制御と高度制御の基本的な動作確認
+Verification of basic attitude and altitude control
 """
 
 import sys
@@ -17,83 +17,83 @@ from src.visualization import SimulationVisualizer
 
 
 def main():
-    print("=== 基本飛行シミュレーション ===")
+    print("=== Basic Flight Simulation ===")
 
-    # シミュレーションパラメータ
-    dt = 0.01  # 時間ステップ [s]
-    T_sim = 60.0  # シミュレーション時間 [s]
+    # Simulation parameters
+    dt = 0.01  # Time step [s]
+    T_sim = 60.0  # Simulation time [s]
 
-    # UAVの初期化
+    # Initialize UAV
     uav = FixedWingUAV()
-    uav.set_state([0, 0, -100, 25, 0, 0, 0, 0, 0, 0, 0, 0])  # 初期状態
+    uav.set_state([0, 0, -100, 25, 0, 0, 0, 0, 0, 0, 0, 0])  # Initial state
 
-    # 空力モデル
+    # Aerodynamic model
     aero = AerodynamicModel()
 
-    # 制御器の初期化
+    # Initialize controllers
     attitude_controller = AttitudeController()
     altitude_controller = AltitudeController()
     airspeed_controller = AirspeedController()
 
-    # 可視化
+    # Visualization
     viz = SimulationVisualizer()
 
-    # 目標値の設定
-    h_c = -150.0  # 目標高度 [m] (NED座標系)
-    Va_c = 25.0   # 目標速度 [m/s]
+    # Set target values
+    h_c = -150.0  # Target altitude [m] (NED frame)
+    Va_c = 25.0   # Target airspeed [m/s]
 
-    # シミュレーションループ
+    # Simulation loop
     time = 0.0
     step = 0
 
-    print(f"初期位置: {uav.get_position()}")
-    print(f"目標高度: {-h_c} m")
-    print(f"目標速度: {Va_c} m/s")
-    print("シミュレーション開始...")
+    print(f"Initial position: {uav.get_position()}")
+    print(f"Target altitude: {-h_c} m")
+    print(f"Target airspeed: {Va_c} m/s")
+    print("Starting simulation...")
 
     while time < T_sim:
-        # 現在の状態
+        # Current state
         position = uav.get_position()
         phi, theta, psi = uav.get_attitude()
         Va = uav.get_airspeed()
 
-        # 高度制御でピッチ角指令を生成
+        # Generate pitch command from altitude controller
         theta_c = altitude_controller.compute_pitch_command(uav, h_c, dt)
 
-        # 速度制御でスロットル指令を生成
+        # Generate throttle command from airspeed controller
         delta_t = airspeed_controller.compute_throttle_command(uav, Va_c, dt)
 
-        # 姿勢制御で舵面指令を生成
-        phi_c = 0.0  # 水平飛行
+        # Generate control surface commands from attitude controller
+        phi_c = 0.0  # Level flight
         delta_a, delta_e, delta_r = attitude_controller.compute_control(uav, phi_c, theta_c, dt)
 
-        # 制御入力を設定
+        # Set control inputs
         control = np.array([delta_e, delta_a, delta_r, delta_t])
         uav.set_control(control)
 
-        # 空力力とモーメントを計算
+        # Calculate aerodynamic forces and moments
         forces_moments = aero.compute_forces_moments(uav, control)
 
-        # 状態を更新
+        # Update state
         uav.update(dt, forces_moments)
 
-        # データを記録
-        if step % 10 == 0:  # 0.1秒ごとに記録
+        # Record data
+        if step % 10 == 0:  # Record every 0.1 seconds
             viz.add_data(time, uav.get_state(), control)
 
-        # 進捗表示
+        # Progress display
         if step % 1000 == 0:
-            print(f"時刻: {time:.1f}s, 高度: {-position[2]:.1f}m, 速度: {Va:.1f}m/s")
+            print(f"Time: {time:.1f}s, Altitude: {-position[2]:.1f}m, Airspeed: {Va:.1f}m/s")
 
         time += dt
         step += 1
 
-    print("シミュレーション完了")
-    print(f"最終位置: {uav.get_position()}")
-    print(f"最終速度: {uav.get_airspeed():.2f} m/s")
+    print("Simulation complete")
+    print(f"Final position: {uav.get_position()}")
+    print(f"Final airspeed: {uav.get_airspeed():.2f} m/s")
 
-    # 結果の可視化
-    print("\n結果をプロット中...")
+    # Visualize results
+    print("\nPlotting results...")
     viz.plot_3d_trajectory()
     viz.plot_states()
     viz.plot_controls()
