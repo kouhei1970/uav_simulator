@@ -272,6 +272,174 @@ class PathManager:
         return psi_c, h_c
 
 
+class L1Guidance:
+    """
+    L1適応誘導則(L1 Adaptive Guidance)
+
+    直線経路および円軌道の追従に使用される適応誘導アルゴリズム。
+    Park, Deyst, How (2004) "A New Nonlinear Guidance Logic for Trajectory Tracking"に基づく。
+    """
+
+    def __init__(self, L1_distance=None, L1_damping=0.707, L1_period=15.0):
+        """
+        パラメータ:
+            L1_distance: L1距離 [m] (Noneの場合は自動計算)
+            L1_damping: L1ダンピング係数 (通常0.5-1.0)
+            L1_period: L1周期 [s] (通常10-25)
+        """
+        self.L1_distance = L1_distance
+        self.L1_damping = L1_damping
+        self.L1_period = L1_period
+        self.gravity = 9.81
+
+    def compute_L1_distance(self, V_a):
+        """
+        対気速度からL1距離を計算
+
+        パラメータ:
+            V_a: 対気速度 [m/s]
+
+        戻り値:
+            L1: L1距離 [m]
+        """
+        if self.L1_distance is not None:
+            return self.L1_distance
+
+        # L1 = (1/π) * ζ * T * V_a
+        # ζ: damping ratio, T: period
+        L1 = (1.0 / np.pi) * self.L1_damping * self.L1_period * V_a
+        return L1
+
+    def compute_lateral_acceleration(self, position, V_a, chi, path_type='line',
+                                     path_params=None):
+        """
+        L1誘導則による横方向加速度指令を計算
+
+        パラメータ:
+            position: 現在位置 [x, y, z]
+            V_a: 対気速度 [m/s]
+            chi: 現在のコース角 [rad]
+            path_type: 経路タイプ ('line' or 'orbit')
+            path_params: 経路パラメータ
+                - 'line': {'start': [x,y,z], 'end': [x,y,z]} or {'point': [x,y,z], 'direction': [x,y,z]}
+                - 'orbit': {'center': [x,y,z], 'radius': float, 'direction': 'CW' or 'CCW'}
+
+        戻り値:
+            a_cmd: 横方向加速度指令 [m/s²]
+            eta: 方位角誤差 [rad]
+        """
+        L1 = self.compute_L1_distance(V_a)
+
+        if path_type == 'line':
+            a_cmd, eta = self._compute_line_tracking(position, V_a, chi, L1, path_params)
+        elif path_type == 'orbit':
+            a_cmd, eta = self._compute_orbit_tracking(position, V_a, chi, L1, path_params)
+        else:
+            raise ValueError(f"Unknown path type: {path_type}")
+
+        return a_cmd, eta
+
+    def _compute_line_tracking(self, position, V_a, chi, L1, path_params):
+        """直線経路追従のための横方向加速度を計算"""
+        # 経路パラメータの取得
+        if 'start' in path_params and 'end' in path_params:
+            start_point = np.array(path_params['start'])
+            end_point = np.array(path_params['end'])
+            path_direction = end_point - start_point
+            path_direction = path_direction / np.linalg.norm(path_direction)
+            path_point = start_point
+        elif 'point' in path_params and 'direction' in path_params:
+            path_point = np.array(path_params['point'])
+            path_direction = np.array(path_params['direction'])
+            path_direction = path_direction / np.linalg.norm(path_direction)
+        else:
+            raise ValueError("Invalid path_params for line tracking")
+
+        # 経路の方位角
+        chi_q = np.arctan2(path_direction[1], path_direction[0])
+
+        # 経路への相対位置(2D)
+        r = position[0:2] - path_point[0:2]
+
+        # クロストラック誤差(経路に垂直な距離)
+        # e_py = r × q (外積のz成分)
+        e_py = r[0] * path_direction[1] - r[1] * path_direction[0]
+
+        # 方位角誤差
+        eta = self._wrap_angle(chi_q - chi)
+
+        # L1法則による横方向加速度
+        # a_cmd = 2 * V_a² / L1 * sin(η)
+        # ここで sin(η) ≈ η + e_py/L1 (小角度近似)
+        a_cmd = 2.0 * V_a**2 / L1 * np.sin(np.arctan2(-e_py, L1))
+
+        return a_cmd, eta
+
+    def _compute_orbit_tracking(self, position, V_a, chi, L1, path_params):
+        """円軌道追従のための横方向加速度を計算"""
+        center = np.array(path_params['center'])
+        radius = path_params['radius']
+        direction = path_params.get('direction', 'CW')
+
+        # 旋回中心への相対位置(2D)
+        d_vec = position[0:2] - center[0:2]
+        d = np.linalg.norm(d_vec)
+
+        if d < 0.1:
+            return 0.0, 0.0
+
+        # 旋回方向
+        lambda_val = 1 if direction == 'CW' else -1
+
+        # 中心からの角度
+        angle_from_center = np.arctan2(d_vec[1], d_vec[0])
+
+        # 目標コース角(接線方向)
+        chi_q = angle_from_center + lambda_val * np.pi / 2
+
+        # 方位角誤差
+        eta = self._wrap_angle(chi_q - chi)
+
+        # 半径誤差
+        e_r = d - radius
+
+        # L1法則による横方向加速度
+        # 円軌道の場合: a_cmd = 2 * V_a² / L1 * sin(arctan2(-e_r, L1)) + V_a² / R
+        a_lateral = 2.0 * V_a**2 / L1 * np.sin(np.arctan2(lambda_val * e_r, L1))
+        a_centripetal = lambda_val * V_a**2 / radius
+        a_cmd = a_lateral + a_centripetal
+
+        return a_cmd, eta
+
+    def compute_roll_command(self, a_cmd, V_a, phi_limit=np.pi/4):
+        """
+        横方向加速度指令からロール角指令を計算
+
+        パラメータ:
+            a_cmd: 横方向加速度指令 [m/s²]
+            V_a: 対気速度 [m/s]
+            phi_limit: 最大バンク角制限 [rad]
+
+        戻り値:
+            phi_c: 目標ロール角 [rad]
+        """
+        # 協調旋回の関係: a = g * tan(φ)
+        phi_c = np.arctan(a_cmd / self.gravity)
+
+        # バンク角制限
+        phi_c = np.clip(phi_c, -phi_limit, phi_limit)
+
+        return phi_c
+
+    def _wrap_angle(self, angle):
+        """角度を±πの範囲に正規化"""
+        while angle > np.pi:
+            angle -= 2 * np.pi
+        while angle < -np.pi:
+            angle += 2 * np.pi
+        return angle
+
+
 class CoordinatedTurnGuidance:
     """協調旋回誘導(バンク角を使った旋回)"""
 
