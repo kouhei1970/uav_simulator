@@ -11,15 +11,30 @@ from scipy.integrate import ode
 class FixedWingUAV:
     """固定翼UAVの動力学モデル"""
 
-    def __init__(self, params=None):
+    def __init__(self, params=None, aircraft_type=None):
         """
         パラメータ:
             params: 機体パラメータの辞書(Noneの場合はデフォルト値を使用)
+            aircraft_type: 機体タイプ ('small', 'medium', 'micro', 'large')
+                         paramsとaircraft_typeの両方が指定された場合はparamsを優先
         """
         if params is None:
-            params = self._default_params()
+            if aircraft_type is not None:
+                # config/aircraft_params.pyから機体パラメータを読み込み
+                try:
+                    import sys
+                    import os
+                    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+                    from config.aircraft_params import get_aircraft_params
+                    params, _ = get_aircraft_params(aircraft_type)
+                except ImportError:
+                    print(f"Warning: Could not load aircraft type '{aircraft_type}', using default params")
+                    params = self._default_params()
+            else:
+                params = self._default_params()
 
         self.params = params
+        self.aircraft_type = aircraft_type if aircraft_type else 'custom'
 
         # 状態変数の初期化
         # [x, y, z, u, v, w, phi, theta, psi, p, q, r]

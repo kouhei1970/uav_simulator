@@ -10,15 +10,30 @@ import numpy as np
 class AerodynamicModel:
     """空力モデル"""
 
-    def __init__(self, params=None):
+    def __init__(self, params=None, aircraft_type=None):
         """
         パラメータ:
             params: 空力パラメータの辞書
+            aircraft_type: 機体タイプ ('small', 'medium', 'micro', 'large')
+                         paramsとaircraft_typeの両方が指定された場合はparamsを優先
         """
         if params is None:
-            params = self._default_aero_params()
+            if aircraft_type is not None:
+                # config/aircraft_params.pyから空力パラメータを読み込み
+                try:
+                    import sys
+                    import os
+                    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+                    from config.aircraft_params import get_aircraft_params
+                    _, params = get_aircraft_params(aircraft_type)
+                except ImportError:
+                    print(f"Warning: Could not load aircraft type '{aircraft_type}', using default params")
+                    params = self._default_aero_params()
+            else:
+                params = self._default_aero_params()
 
         self.aero_params = params
+        self.aircraft_type = aircraft_type if aircraft_type else 'custom'
 
     def _default_aero_params(self):
         """デフォルトの空力パラメータ"""

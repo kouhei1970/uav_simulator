@@ -6,9 +6,21 @@
 
 - **6自由度動力学モデル**: 完全な位置、速度、姿勢、角速度の動力学
 - **空力モデル**: 安定微係数と操縦微係数に基づく空力特性
+- **複数の機体モデル**: 超小型から大型まで4種類の機体パラメータ
 - **制御則**: 姿勢制御(ロール、ピッチ、ヨー)、高度制御、速度制御
 - **誘導則**: 経路点追従、直線経路追従、旋回飛行
 - **可視化**: リアルタイムの3D軌跡と状態プロット
+
+## 機体モデル
+
+4種類の固定翼UAVモデルを用意しています:
+
+| モデル名 | 翼幅 | 質量 | 用途 |
+|---------|------|------|------|
+| **micro** | 0.8m | 0.5kg | 超小型（屋内用） |
+| **small** | 1.6m | 1.7kg | 小型（目標機体） |
+| **medium** | 2.9m | 11.0kg | 中型（Rascalクラス） |
+| **large** | 4.0m | 20.0kg | 大型（長時間飛行用） |
 
 ## 必要なパッケージ
 
@@ -41,12 +53,14 @@ uav_simulator/
 
 ```python
 from src.dynamics import FixedWingUAV
+from src.aerodynamics import AerodynamicModel
 from src.controller import AttitudeController
 from src.guidance import WaypointGuidance
 import numpy as np
 
-# UAVを初期化
-uav = FixedWingUAV()
+# 小型UAV（1.6m, 1.7kg）を初期化
+uav = FixedWingUAV(aircraft_type='small')
+aero = AerodynamicModel(aircraft_type='small')
 
 # 制御器を初期化
 controller = AttitudeController()
@@ -57,6 +71,21 @@ guidance = WaypointGuidance(waypoints)
 
 # シミュレーションループ
 # ... (examples参照)
+```
+
+### 機体タイプの指定
+
+```python
+# 方法1: 機体タイプを指定
+uav = FixedWingUAV(aircraft_type='small')  # 'micro', 'small', 'medium', 'large'
+aero = AerodynamicModel(aircraft_type='small')
+
+# 方法2: カスタムパラメータを使用
+from config.aircraft_params import get_small_uav_params, get_small_uav_aero_params
+aircraft_params = get_small_uav_params()
+aero_params = get_small_uav_aero_params()
+uav = FixedWingUAV(params=aircraft_params)
+aero = AerodynamicModel(params=aero_params)
 ```
 
 ### サンプル実行
@@ -70,6 +99,12 @@ python examples/waypoint_nav.py
 
 # 旋回飛行
 python examples/orbit_flight.py
+
+# 小型UAV専用デモ（全幅1.6m、質量1.7kg）
+python examples/small_uav_demo.py
+
+# 複数機体の比較
+python examples/compare_aircraft.py
 ```
 
 ## 座標系
