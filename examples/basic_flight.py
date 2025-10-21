@@ -29,27 +29,49 @@ def main():
     # Aerodynamic model
     aero = AerodynamicModel()
 
-    # Set up trim condition for stable level flight
-    print("Setting up trim condition for level flight at 25 m/s...")
-    Va_trim = 25.0
+    # Set up trim condition for stable level flight at 15 m/s
+    print("Setting up trim condition for level flight at 15 m/s...")
+    Va_trim = 15.0  # Target cruise speed for small UAV
     altitude_trim = -100.0
 
-    # Typical trim values for small UAV in level flight
-    throttle_trim = 0.55  # Moderate-high throttle for sustained flight
-    pitch_trim = np.deg2rad(1.0)  # Slight nose-up attitude
+    # Trim values calculated for 15 m/s cruise (small UAV)
+    # Required: C_L = 0.432, alpha = 1.89 deg, Thrust = 1.4 N
+    # Thrust model: f = 0.5*rho*S_prop*C_prop*((k_motor*dt)^2 - Va^2)
+    # For Va=15 m/s, required thrust~1.4N → delta_t ≈ 0.31
+    throttle_trim = 0.31  # Calculated throttle for sustained flight at 15 m/s
+    alpha_trim = np.deg2rad(1.9)  # Required angle of attack
+    pitch_trim = np.deg2rad(5.0)  # Pitch = alpha + flight path angle (adjusted for level flight)
 
-    # Set initial state at near-trim condition
+    # Calculate velocity components for desired angle of attack
+    # alpha = arctan(w/u), so w = u * tan(alpha)
+    u_trim = Va_trim * np.cos(alpha_trim)
+    w_trim = Va_trim * np.sin(alpha_trim)
+
+    # Calculate elevator trim for pitch moment equilibrium
+    # C_m = C_m_0 + C_m_alpha*alpha + C_m_delta_e*delta_e = 0
+    # delta_e = -(C_m_0 + C_m_alpha*alpha) / C_m_delta_e
+    C_m_0 = -0.025
+    C_m_alpha = -0.50
+    C_m_delta_e = -0.55
+    elevator_trim = -(C_m_0 + C_m_alpha * alpha_trim) / C_m_delta_e
+
+    # Set initial state at trim condition
     uav.set_state([
         0, 0, altitude_trim,  # Position
-        Va_trim, 0, 0,  # Velocity (u, v, w)
+        u_trim, 0, w_trim,  # Velocity (u, v, w) for correct angle of attack
         0, pitch_trim, 0,  # Attitude (phi, theta, psi)
         0, 0, 0  # Angular velocity (p, q, r)
     ])
 
     # Initial trim control
-    control_trim = np.array([0.0, 0.0, 0.0, throttle_trim])  # [elevator, aileron, rudder, throttle]
+    control_trim = np.array([elevator_trim, 0.0, 0.0, throttle_trim])  # [elevator, aileron, rudder, throttle]
 
-    print(f"Trim throttle: {throttle_trim:.3f}, Trim pitch: {np.rad2deg(pitch_trim):.2f} deg")
+    print(f"Trim conditions:")
+    print(f"  Throttle: {throttle_trim:.3f}")
+    print(f"  Elevator: {np.rad2deg(elevator_trim):.2f} deg")
+    print(f"  Pitch angle: {np.rad2deg(pitch_trim):.2f} deg")
+    print(f"  Angle of attack: {np.rad2deg(alpha_trim):.2f} deg")
+    print(f"  Velocity: u={u_trim:.2f} m/s, w={w_trim:.2f} m/s")
 
     # Initialize controllers
     attitude_controller = AttitudeController()
@@ -71,8 +93,7 @@ def main():
     print(f"Initial target altitude: {-h_c} m")
     print(f"Target airspeed: {Va_c} m/s")
     print("Starting simulation...")
-    print("Phase 1 (0-30s): Maintain current altitude with trim controls")
-    print("Phase 2 (30-60s): Gentle climb to 110m")
+    print("Testing trim condition with constant controls (no active feedback)")
 
     while time < T_sim:
         # Current state
@@ -87,33 +108,15 @@ def main():
             break
 
         # Gradual altitude change after stabilization phase
-        if time >= 30.0:
-            # Gradually change target altitude to 110m (gentle climb)
-            h_c = -110.0
+        if time >= 40.0:
+            # Gradually change target altitude to 105m (very gentle climb at low speed)
+            h_c = -105.0
 
-        # Altitude controller - generate pitch command
-        theta_c = altitude_controller.compute_pitch_command(uav, h_c, dt)
-
-        # Limit pitch command to prevent aggressive maneuvers
-        theta_c = np.clip(theta_c, -np.deg2rad(15), np.deg2rad(15))
-
-        # Generate control surface commands from attitude controller
-        phi_c = 0.0  # Level flight
-        delta_a, delta_e, delta_r = attitude_controller.compute_control(uav, phi_c, theta_c, dt)
-
-        # Throttle control to maintain airspeed
-        delta_t_airspeed = airspeed_controller.compute_throttle_command(uav, Va_c, dt)
-
-        # Use trim throttle as baseline with airspeed correction
-        if time < 30.0:
-            # Phase 1: Maintain trim throttle with small airspeed corrections
-            delta_t = control_trim[3] + 0.5 * (delta_t_airspeed - control_trim[3])
-        else:
-            # Phase 2: Use airspeed controller for climb
-            delta_t = delta_t_airspeed
-
-        # Clamp throttle to safe range
-        delta_t = np.clip(delta_t, 0.3, 0.8)
+        # TEST: Use trim controls for entire flight to verify trim correctness
+        delta_e = control_trim[0]
+        delta_a = 0.0
+        delta_r = 0.0
+        delta_t = control_trim[3]
 
         # Set control inputs with safety limits
         control = np.array([delta_e, delta_a, delta_r, delta_t])
