@@ -49,12 +49,13 @@ def simulate_aircraft(aircraft_type, target_altitude=-100.0, target_speed=None, 
     aero = AerodynamicModel(aircraft_type=aircraft_type)
 
     # Set trim condition for stable level flight
-    # Throttle from force balance, pitch adjusted for level flight
+    # Trim values tuned for stable flight characteristics
+    # Similar methodology to basic_flight.py
     trim_config = {
-        'micro': {'throttle': 0.380, 'pitch': np.deg2rad(5.5), 'alpha': np.deg2rad(1.44)},
-        'small': {'throttle': 0.307, 'pitch': np.deg2rad(6.5), 'alpha': np.deg2rad(1.89)},
-        'medium': {'throttle': 0.428, 'pitch': np.deg2rad(7.0), 'alpha': np.deg2rad(3.86)},
-        'large': {'throttle': 0.394, 'pitch': np.deg2rad(6.0), 'alpha': np.deg2rad(1.90)}
+        'micro': {'throttle': 0.380, 'pitch': np.deg2rad(4.0), 'alpha': np.deg2rad(1.44)},
+        'small': {'throttle': 0.310, 'pitch': np.deg2rad(5.0), 'alpha': np.deg2rad(1.89)},
+        'medium': {'throttle': 0.428, 'pitch': np.deg2rad(6.5), 'alpha': np.deg2rad(3.86)},
+        'large': {'throttle': 0.394, 'pitch': np.deg2rad(5.0), 'alpha': np.deg2rad(1.90)}
     }
 
     trim = trim_config.get(aircraft_type, trim_config['small'])
