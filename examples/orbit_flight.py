@@ -26,7 +26,7 @@ def main():
 
     # Orbit parameters
     orbit_center = np.array([300, 300, -100])  # Orbit center [m]
-    orbit_radius = 50.0  # Orbit radius [m] (optimal range for small UAV: 30-100m)
+    orbit_radius = 80.0  # Orbit radius [m] (optimal range for small UAV: 30-100m)
     orbit_direction = 'CW'  # Orbit direction (CW: clockwise, CCW: counter-clockwise)
 
     print(f"Orbit center: North={orbit_center[0]}m, East={orbit_center[1]}m, Altitude={-orbit_center[2]}m")
@@ -45,12 +45,17 @@ def main():
     u_trim = Va_trim * np.cos(alpha_trim)
     w_trim = Va_trim * np.sin(alpha_trim)
 
-    # Start from outside the orbit circle
-    initial_pos = orbit_center + np.array([orbit_radius + 50, 0, 0])
+    # Start from slightly outside the orbit circle for smooth entry
+    initial_pos = orbit_center + np.array([orbit_radius + 10, 0, 0])
 
-    # Set initial heading towards orbit center for faster convergence
-    delta_pos = orbit_center - initial_pos
-    initial_psi = np.arctan2(delta_pos[1], delta_pos[0])  # Heading towards center
+    # Set initial heading tangent to orbit circle for smooth entry
+    # Starting position is north of center [300+60, 300, -100]
+    # For CCW (counter-clockwise from above): fly west initially (psi = -π/2)
+    # For CW (clockwise from above): fly east initially (psi = +π/2)
+    if orbit_direction == 'CCW':
+        initial_psi = -np.pi / 2  # West (-90 deg = 270 deg)
+    else:
+        initial_psi = np.pi / 2  # East (90 deg)
 
     # Set initial state with trim condition
     uav.set_state([
@@ -67,8 +72,8 @@ def main():
     # for better stability during orbit flight
 
     # Initialize proportional orbit guidance
-    # K_p controls convergence rate: higher = faster convergence but may overshoot
-    orbit_guidance = ProportionalOrbitGuidance(K_p=0.02, phi_max=np.deg2rad(30))
+    # K_p controls convergence rate: tuned for stable convergence
+    orbit_guidance = ProportionalOrbitGuidance(K_p=0.01, phi_max=np.deg2rad(35))
 
     # Visualization
     viz = SimulationVisualizer()
@@ -111,7 +116,7 @@ def main():
             phi_error += 2 * np.pi
 
         # Simple proportional aileron control
-        k_phi = 0.5  # Roll angle gain
+        k_phi = 0.8  # Roll angle gain (higher = faster response)
         delta_a = k_phi * phi_error
         delta_a = np.clip(delta_a, -0.3, 0.3)  # Limit aileron deflection
 
