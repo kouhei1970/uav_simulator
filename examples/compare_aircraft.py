@@ -44,10 +44,42 @@ def simulate_aircraft(aircraft_type, target_altitude=-100.0, target_speed=None, 
 
     # Initialize UAV
     uav = FixedWingUAV(aircraft_type=aircraft_type)
-    uav.set_state([0, 0, target_altitude, target_speed, 0, 0, 0, 0, 0, 0, 0, 0])
 
     # Aerodynamic model
     aero = AerodynamicModel(aircraft_type=aircraft_type)
+
+    # Set trim condition for stable level flight
+    # Throttle from force balance, pitch adjusted for level flight
+    trim_config = {
+        'micro': {'throttle': 0.380, 'pitch': np.deg2rad(5.5), 'alpha': np.deg2rad(1.44)},
+        'small': {'throttle': 0.307, 'pitch': np.deg2rad(6.5), 'alpha': np.deg2rad(1.89)},
+        'medium': {'throttle': 0.428, 'pitch': np.deg2rad(7.0), 'alpha': np.deg2rad(3.86)},
+        'large': {'throttle': 0.394, 'pitch': np.deg2rad(6.0), 'alpha': np.deg2rad(1.90)}
+    }
+
+    trim = trim_config.get(aircraft_type, trim_config['small'])
+
+    # Calculate velocity components for desired angle of attack
+    u_trim = target_speed * np.cos(trim['alpha'])
+    w_trim = target_speed * np.sin(trim['alpha'])
+
+    # Calculate elevator trim for pitch moment equilibrium
+    # Use aircraft-specific aerodynamic coefficients
+    C_m_0 = aero.aero_params['C_m_0']
+    C_m_alpha = aero.aero_params['C_m_alpha']
+    C_m_delta_e = aero.aero_params['C_m_delta_e']
+    elevator_trim = -(C_m_0 + C_m_alpha * trim['alpha']) / C_m_delta_e
+
+    # Set initial state at trim condition
+    uav.set_state([
+        0, 0, target_altitude,  # Position
+        u_trim, 0, w_trim,  # Velocity
+        0, trim['pitch'], 0,  # Attitude
+        0, 0, 0  # Angular velocity
+    ])
+
+    # Initial trim control
+    control_trim = np.array([elevator_trim, 0.0, 0.0, trim['throttle']])
 
     # Initialize controllers
     attitude_controller = AttitudeController()
@@ -66,11 +98,7 @@ def simulate_aircraft(aircraft_type, target_altitude=-100.0, target_speed=None, 
     # Simulation parameters
     dt = 0.01  # Time step [s]
 
-    # Target values
-    h_c = target_altitude - 50.0  # Climb 50m more
-    Va_c = target_speed
-
-    # Simulation loop
+    # Simulation loop (using trim controls only for aircraft comparison)
     time = 0.0
     step = 0
 
@@ -80,15 +108,18 @@ def simulate_aircraft(aircraft_type, target_altitude=-100.0, target_speed=None, 
         phi, theta, psi = uav.get_attitude()
         Va = uav.get_airspeed()
 
-        # Generate pitch command from altitude controller
-        theta_c = altitude_controller.compute_pitch_command(uav, h_c, dt)
+        # Check for numerical stability
+        if np.isnan(Va) or np.isinf(Va) or Va > 100.0:
+            print(f"WARNING: Numerical instability at t={time:.1f}s, Va={Va:.1f}m/s")
+            break
 
-        # Generate throttle command from airspeed controller
-        delta_t = airspeed_controller.compute_throttle_command(uav, Va_c, dt)
-
-        # Generate control surface commands from attitude controller
-        phi_c = 0.0  # Level flight
-        delta_a, delta_e, delta_r = attitude_controller.compute_control(uav, phi_c, theta_c, dt)
+        # Use trim controls for stable comparison flight
+        # This allows direct comparison of aircraft characteristics
+        # without controller effects
+        delta_e = control_trim[0]
+        delta_a = 0.0
+        delta_r = 0.0
+        delta_t = control_trim[3]
 
         # Set control inputs
         control = np.array([delta_e, delta_a, delta_r, delta_t])
