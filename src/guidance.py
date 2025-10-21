@@ -495,3 +495,132 @@ class CoordinatedTurnGuidance:
         if np.abs(np.tan(phi)) < 0.01:
             return np.inf
         return self.V_a**2 / (g * np.tan(phi))
+
+
+class ProportionalOrbitGuidance:
+    """
+    比例制御ベースの円軌道誘導
+
+    GPS誤差のある中心座標と半径推定値を使用して、
+    半径誤差の比例制御により円旋回を実現します。
+
+    制御則:
+        φ_c = φ_ff + K_p * e_r
+
+    ここで:
+        φ_ff: フィードフォワード項（定常旋回のバンク角）
+        e_r: 半径誤差（実際の距離 - 目標半径）
+        K_p: 比例ゲイン
+    """
+
+    def __init__(self, K_p=0.05, phi_max=np.pi/4):
+        """
+        パラメータ:
+            K_p: 半径誤差の比例ゲイン [rad/m]
+            phi_max: 最大バンク角制限 [rad]
+        """
+        self.K_p = K_p
+        self.phi_max = phi_max
+        self.gravity = 9.81  # 重力加速度 [m/s²]
+
+    def compute_roll_command(self, position, center, radius, V_a, direction='CW'):
+        """
+        比例制御による円旋回のロール角指令を計算
+
+        パラメータ:
+            position: 現在位置 [x, y, z]
+            center: 旋回中心（GPS推定値、誤差を含む） [x, y, z]
+            radius: 目標旋回半径（GPS推定値、誤差を含む） [m]
+            V_a: 対気速度 [m/s]
+            direction: 旋回方向 ('CW': 時計回り, 'CCW': 反時計回り)
+
+        戻り値:
+            phi_c: 目標ロール角 [rad]
+            e_r: 半径誤差 [m]
+            d: 中心からの実際の距離 [m]
+        """
+        # 旋回方向の符号
+        lambda_val = 1 if direction == 'CW' else -1
+
+        # 中心からの距離ベクトル（2D）
+        d_vec = position[0:2] - center[0:2]
+        d = np.linalg.norm(d_vec)
+
+        # 中心に近すぎる場合の特異点回避
+        if d < 0.1:
+            return 0.0, 0.0, d
+
+        # 半径誤差
+        # 正: 目標半径より外側、負: 目標半径より内側
+        e_r = d - radius
+
+        # フィードフォワード項：定常旋回のバンク角
+        # 協調旋回: V_a² / (g * R) = g * tan(φ_ff)
+        # したがって: φ_ff = arctan(V_a² / (g * R))
+        phi_ff = lambda_val * np.arctan(V_a**2 / (self.gravity * radius))
+
+        # 比例制御項：半径誤差に対する補正
+        # 外側にいる場合（e_r > 0）→バンク角を増やして内側に
+        # 内側にいる場合（e_r < 0）→バンク角を減らして外側に
+        phi_p = lambda_val * self.K_p * e_r
+
+        # 合計ロール角指令
+        phi_c = phi_ff + phi_p
+
+        # バンク角制限
+        phi_c = np.clip(phi_c, -self.phi_max, self.phi_max)
+
+        return phi_c, e_r, d
+
+    def compute_feedforward_roll(self, V_a, radius, direction='CW'):
+        """
+        定常旋回のためのフィードフォワードロール角を計算
+
+        パラメータ:
+            V_a: 対気速度 [m/s]
+            radius: 旋回半径 [m]
+            direction: 旋回方向 ('CW' or 'CCW')
+
+        戻り値:
+            phi_ff: フィードフォワードロール角 [rad]
+        """
+        lambda_val = 1 if direction == 'CW' else -1
+        phi_ff = lambda_val * np.arctan(V_a**2 / (self.gravity * radius))
+        return phi_ff
+
+    def analyze_stability(self, V_a, radius):
+        """
+        線形化システムの安定性を解析
+
+        パラメータ:
+            V_a: 対気速度 [m/s]
+            radius: 旋回半径 [m]
+
+        戻り値:
+            eigenvalue: システムの固有値（負なら安定）
+            time_constant: 時定数 [s]
+            damping_ratio: 減衰比
+        """
+        # 線形化システムの解析
+        # ドキュメントの安定性解析セクション参照
+
+        # フィードフォワードバンク角
+        phi_ff = np.arctan(V_a**2 / (self.gravity * radius))
+
+        # システムパラメータ
+        # d(phi)/dt ≈ -a * e_r, a = K_p * V_a
+        a = self.K_p * V_a
+
+        # 1次システムの固有値（時定数の逆数）
+        # 簡略化モデル: de_r/dt = -a * e_r
+        eigenvalue = -a
+
+        # 時定数: τ = 1/a
+        time_constant = 1.0 / a if a > 0 else np.inf
+
+        # 1次システムなので減衰比は定義されない（2次系のパラメータ）
+        # 便宜上1.0（臨界減衰相当）を返す
+        damping_ratio = 1.0
+
+        return eigenvalue, time_constant, damping_ratio
+
