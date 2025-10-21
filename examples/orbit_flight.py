@@ -26,7 +26,7 @@ def main():
 
     # Orbit parameters
     orbit_center = np.array([300, 300, -100])  # Orbit center [m]
-    orbit_radius = 80.0  # Orbit radius [m] (optimal range for small UAV: 30-100m)
+    orbit_radius = 45.0  # Orbit radius [m] (optimal range for small UAV: 30-100m)
     orbit_direction = 'CW'  # Orbit direction (CW: clockwise, CCW: counter-clockwise)
 
     print(f"Orbit center: North={orbit_center[0]}m, East={orbit_center[1]}m, Altitude={-orbit_center[2]}m")
@@ -45,8 +45,9 @@ def main():
     u_trim = Va_trim * np.cos(alpha_trim)
     w_trim = Va_trim * np.sin(alpha_trim)
 
-    # Start from slightly outside the orbit circle for smooth entry
-    initial_pos = orbit_center + np.array([orbit_radius + 10, 0, 0])
+    # Start from very close to the orbit circle for smooth entry
+    # Smaller radius needs closer initial position
+    initial_pos = orbit_center + np.array([orbit_radius + 2, 0, 0])
 
     # Set initial heading tangent to orbit circle for smooth entry
     # Starting position is north of center [300+60, 300, -100]
@@ -73,7 +74,8 @@ def main():
 
     # Initialize proportional orbit guidance
     # K_p controls convergence rate: tuned for stable convergence
-    orbit_guidance = ProportionalOrbitGuidance(K_p=0.01, phi_max=np.deg2rad(35))
+    # Smaller radius requires careful tuning
+    orbit_guidance = ProportionalOrbitGuidance(K_p=0.005, phi_max=np.deg2rad(35))
 
     # Visualization
     viz = SimulationVisualizer()
@@ -116,9 +118,10 @@ def main():
             phi_error += 2 * np.pi
 
         # Simple proportional aileron control
-        k_phi = 0.8  # Roll angle gain (higher = faster response)
+        # Higher gain for faster roll response in tight turns
+        k_phi = 1.2  # Roll angle gain (higher = faster response)
         delta_a = k_phi * phi_error
-        delta_a = np.clip(delta_a, -0.3, 0.3)  # Limit aileron deflection
+        delta_a = np.clip(delta_a, -0.4, 0.4)  # Limit aileron deflection
 
         # Use trim elevator and throttle for stable flight
         # Note: Altitude gradually increases (~0.3 m/s) due to banked flight,
