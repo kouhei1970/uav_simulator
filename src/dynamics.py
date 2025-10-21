@@ -224,6 +224,14 @@ class FixedWingUAV:
 
         return state_dot
 
+    def _wrap_angle(self, angle):
+        """Wrap angle to ±π range"""
+        while angle > np.pi:
+            angle -= 2 * np.pi
+        while angle < -np.pi:
+            angle += 2 * np.pi
+        return angle
+
     def update(self, dt, aerodynamic_forces_moments):
         """
         状態を更新(4次のルンゲクッタ法)
@@ -245,6 +253,12 @@ class FixedWingUAV:
 
         self.state = self.state + dt/6 * (k1 + 2*k2 + 2*k3 + k4)
         self.time += dt
+
+        # Normalize attitude angles to ±π range to prevent angle accumulation
+        # This is important for long simulations with continuous rotation (e.g., orbit flight)
+        self.state[6] = self._wrap_angle(self.state[6])  # phi (roll)
+        self.state[7] = self._wrap_angle(self.state[7])  # theta (pitch)
+        self.state[8] = self._wrap_angle(self.state[8])  # psi (yaw)
 
         return self.state
 

@@ -142,7 +142,8 @@ class AttitudeController:
         p, q, r = uav.get_angular_velocity()
 
         # ロール角制御(カスケード制御)
-        phi_error = phi_c - phi
+        # Normalize angle error to ±π for proper control
+        phi_error = self._wrap_angle(phi_c - phi)
         p_c = self.roll_controller.update(phi_error, dt)  # 目標ロールレート
         p_error = p_c - p
         delta_a = self.roll_rate_controller.update(p_error, dt)
@@ -158,6 +159,14 @@ class AttitudeController:
         delta_r = self.sideslip_controller.update(-beta, dt)
 
         return delta_a, delta_e, delta_r
+
+    def _wrap_angle(self, angle):
+        """Wrap angle to ±π range"""
+        while angle > np.pi:
+            angle -= 2 * np.pi
+        while angle < -np.pi:
+            angle += 2 * np.pi
+        return angle
 
     def reset(self):
         """全てのPIDコントローラをリセット"""
