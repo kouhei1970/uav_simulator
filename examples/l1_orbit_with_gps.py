@@ -72,9 +72,8 @@ def main():
 
     # Initialize orbit center and radius estimator
     orbit_estimator = OrbitCenterEstimator(
-        process_noise=0.1,
-        measurement_noise=2.5,
-        initial_center_uncertainty=10.0
+        process_variance=0.01,      # Assume orbit center is nearly stationary
+        measurement_variance=6.25   # GPS horizontal noise variance (2.5^2)
     )
 
     # Initialize L1 guidance

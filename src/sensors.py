@@ -197,56 +197,116 @@ class SimpleKalmanFilter:
 
 class OrbitCenterEstimator:
     """
-    Estimates orbit center from noisy GPS measurements.
+    Estimates orbit center and radius from noisy GPS measurements.
 
-    Uses separate Kalman filters for North, East, and Down coordinates.
+    Uses separate Kalman filters for North, East, and Down coordinates of the center,
+    and a Kalman filter for the orbit radius.
     """
 
     def __init__(self, process_variance=0.01, measurement_variance=4.0):
         """
-        Initialize orbit center estimator.
+        Initialize orbit center and radius estimator.
 
         Parameters:
             process_variance: How much we expect the orbit center to change
             measurement_variance: GPS measurement noise variance
         """
-        # Three Kalman filters for N, E, D coordinates
-        self.filters = [
+        # Three Kalman filters for N, E, D coordinates of center
+        self.center_filters = [
             SimpleKalmanFilter(process_variance, measurement_variance),
             SimpleKalmanFilter(process_variance, measurement_variance),
             SimpleKalmanFilter(process_variance, measurement_variance)
         ]
 
-        self.initialized = False
+        # Kalman filter for radius
+        self.radius_filter = SimpleKalmanFilter(process_variance, measurement_variance)
 
-    def update(self, measured_center):
+        self.initialized = False
+        self.estimated_center = np.array([0.0, 0.0, 0.0])
+        self.estimated_radius = 50.0  # Default radius
+        self.position_buffer = []  # Buffer for estimating center
+
+    def update(self, gps_position, time=None):
         """
-        Update orbit center estimate.
+        Update orbit center and radius estimate.
 
         Parameters:
-            measured_center: Measured orbit center [pn, pe, pd] with GPS errors
+            gps_position: GPS measurement of current position [pn, pe, pd]
+            time: Current time (optional, not used in current implementation)
 
         Returns:
-            estimated_center: Filtered orbit center estimate
+            None (use get_center() and get_radius() to retrieve estimates)
         """
+        # Add position to buffer
+        self.position_buffer.append(np.array(gps_position))
+
+        # Keep only recent positions (last 100 samples)
+        if len(self.position_buffer) > 100:
+            self.position_buffer.pop(0)
+
+        # Need at least a few samples to estimate center
+        if len(self.position_buffer) < 10:
+            # Use simple average as initial estimate
+            self.estimated_center = np.mean(self.position_buffer, axis=0)
+            return
+
+        # Estimate center as mean of positions (simple approach)
+        # In a real implementation, this would use the fact that positions
+        # lie on a circle to better estimate the center
+        measured_center = np.mean(self.position_buffer, axis=0)
+
         if not self.initialized:
             # Initialize filters with first measurement
-            for i, filt in enumerate(self.filters):
+            for i, filt in enumerate(self.center_filters):
                 filt.reset(measured_center[i])
+
+            # Estimate initial radius from spread of positions
+            distances = [np.linalg.norm(pos[0:2] - measured_center[0:2])
+                        for pos in self.position_buffer]
+            initial_radius = np.mean(distances)
+            self.radius_filter.reset(initial_radius)
+
             self.initialized = True
 
-        # Update each coordinate independently
-        estimated_center = np.array([
-            self.filters[0].update(measured_center[0]),
-            self.filters[1].update(measured_center[1]),
-            self.filters[2].update(measured_center[2])
+        # Update center estimate
+        self.estimated_center = np.array([
+            self.center_filters[0].update(measured_center[0]),
+            self.center_filters[1].update(measured_center[1]),
+            self.center_filters[2].update(measured_center[2])
         ])
 
-        return estimated_center
+        # Estimate radius from recent positions
+        distances = [np.linalg.norm(pos[0:2] - self.estimated_center[0:2])
+                    for pos in self.position_buffer[-20:]]  # Use last 20 samples
+        measured_radius = np.mean(distances)
+
+        # Update radius estimate
+        self.estimated_radius = self.radius_filter.update(measured_radius)
+
+    def get_center(self):
+        """
+        Get current estimate of orbit center.
+
+        Returns:
+            estimated_center: [pn, pe, pd]
+        """
+        return self.estimated_center
+
+    def get_radius(self):
+        """
+        Get current estimate of orbit radius.
+
+        Returns:
+            estimated_radius: Orbit radius [m]
+        """
+        return self.estimated_radius
 
     def reset(self):
         """Reset estimator state."""
         self.initialized = False
+        self.position_buffer = []
+        self.estimated_center = np.array([0.0, 0.0, 0.0])
+        self.estimated_radius = 50.0
 
 
 class OutlierDetector:
