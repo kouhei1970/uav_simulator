@@ -27,14 +27,14 @@ class TestL1Guidance:
     def test_initialization(self, l1_guidance):
         """Test L1 guidance initialization"""
         assert l1_guidance is not None
-        assert l1_guidance.damping == 0.707
-        assert l1_guidance.period == 15.0
+        assert l1_guidance.L1_damping == 0.707
+        assert l1_guidance.L1_period == 15.0
 
     def test_l1_distance_calculation(self, l1_guidance):
         """Test L1 distance calculation matches theory"""
         Va = 25.0
         L1_calc = l1_guidance.compute_L1_distance(Va)
-        L1_expected = l1_distance(l1_guidance.damping, l1_guidance.period, Va)
+        L1_expected = l1_distance(l1_guidance.L1_damping, l1_guidance.L1_period, Va)
 
         assert abs(L1_calc - L1_expected) < 0.01
 

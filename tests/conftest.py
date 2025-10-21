@@ -142,7 +142,7 @@ def orbit_estimator():
 @pytest.fixture
 def l1_guidance():
     """L1 adaptive guidance"""
-    return L1Guidance(damping=0.707, period=15.0)
+    return L1Guidance(L1_damping=0.707, L1_period=15.0)
 
 
 @pytest.fixture

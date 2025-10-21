@@ -76,7 +76,8 @@ class TestDynamicsAerodynamicsIntegration:
         # Initial energy
         Va_0 = default_uav.get_airspeed()
         h_0 = -default_uav.get_position()[2]
-        E_0 = 0.5 * default_uav.mass * Va_0**2 + default_uav.mass * 9.81 * h_0
+        m = default_uav.params['mass']
+        E_0 = 0.5 * m * Va_0**2 + m * 9.81 * h_0
 
         # Run with constant throttle
         control = np.array([0, 0, 0, 0.5])
@@ -90,7 +91,8 @@ class TestDynamicsAerodynamicsIntegration:
         # Final energy
         Va_f = default_uav.get_airspeed()
         h_f = -default_uav.get_position()[2]
-        E_f = 0.5 * default_uav.mass * Va_f**2 + default_uav.mass * 9.81 * h_f
+        m = default_uav.params['mass']
+        E_f = 0.5 * m * Va_f**2 + m * 9.81 * h_f
 
         # Energy should have changed (thrust adds energy, drag removes)
         # But should be same order of magnitude
@@ -481,9 +483,9 @@ class TestMultiAircraftTypes:
         large_uav = FixedWingUAV(aircraft_type='large')
 
         # Mass should be different
-        assert small_uav.mass < large_uav.mass
+        assert small_uav.params['mass'] < large_uav.params['mass']
 
         # Moments of inertia should be different
-        assert small_uav.Jx < large_uav.Jx
-        assert small_uav.Jy < large_uav.Jy
-        assert small_uav.Jz < large_uav.Jz
+        assert small_uav.params['Jx'] < large_uav.params['Jx']
+        assert small_uav.params['Jy'] < large_uav.params['Jy']
+        assert small_uav.params['Jz'] < large_uav.params['Jz']

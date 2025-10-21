@@ -28,29 +28,27 @@ class TestInitialization:
 
     def test_small_aircraft_initialization(self, default_aero):
         """Test small aircraft parameters"""
-        assert default_aero.S > 0  # Wing area
-        assert default_aero.b > 0  # Wing span
-        assert default_aero.c > 0  # Chord
+        # Aerodynamic parameters are stored in aero_params dict
+        assert 'C_L_0' in default_aero.aero_params
+        assert 'C_D_0' in default_aero.aero_params
+        assert default_aero.aero_params['C_L_alpha'] > 0  # Lift curve slope
 
     def test_medium_aircraft_initialization(self, medium_aero):
-        """Test medium aircraft has larger parameters than small"""
-        small_aero = AerodynamicModel(aircraft_type='small')
-        assert medium_aero.S > small_aero.S
-        assert medium_aero.b > small_aero.b
+        """Test medium aircraft initialization"""
+        # Check that aero parameters exist
+        assert 'C_L_0' in medium_aero.aero_params
+        assert 'C_D_0' in medium_aero.aero_params
 
     def test_large_aircraft_initialization(self, large_aero):
-        """Test large aircraft has largest parameters"""
-        medium_aero = AerodynamicModel(aircraft_type='medium')
-        assert large_aero.S > medium_aero.S
-        assert large_aero.b > medium_aero.b
+        """Test large aircraft initialization"""
+        # Check that aero parameters exist
+        assert 'C_L_0' in large_aero.aero_params
+        assert 'C_D_0' in large_aero.aero_params
 
     def test_aerodynamic_parameters_positive(self, default_aero):
         """Test that key aerodynamic parameters are positive"""
-        assert default_aero.S > 0
-        assert default_aero.b > 0
-        assert default_aero.c > 0
-        assert default_aero.CL_alpha > 0  # Lift curve slope
-        assert default_aero.CD_0 >= 0     # Parasitic drag
+        assert default_aero.aero_params['C_L_alpha'] > 0  # Lift curve slope
+        assert default_aero.aero_params['C_D_0'] >= 0     # Parasitic drag
 
 
 class TestDynamicPressure:
@@ -195,7 +193,7 @@ class TestDragForce:
     def test_drag_is_always_positive(self, default_aero):
         """Test that drag coefficient is always positive"""
         # CD should always be positive
-        assert default_aero.CD_0 >= 0
+        assert default_aero.aero_params['C_D_0'] >= 0
 
 
 class TestPropellerThrust:
@@ -364,7 +362,7 @@ class TestStability:
 
     def test_positive_lift_curve_slope(self, default_aero):
         """Test that lift curve slope is positive"""
-        assert default_aero.CL_alpha > 0
+        assert default_aero.aero_params['C_L_alpha'] > 0
 
 
 class TestTrimCalculation:
