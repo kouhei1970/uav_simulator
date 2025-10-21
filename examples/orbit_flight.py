@@ -143,8 +143,8 @@ def main():
         # Record data
         if step % 10 == 0:  # Record every 0.1 seconds
             # Create command vector: [phi_c, theta_c, psi_c, p_c, q_c, r_c]
-            # We only have phi_c from orbit guidance
-            command = np.array([phi_c, 0.0, 0.0, 0.0, 0.0, 0.0])
+            # We only control phi (roll angle), others are not controlled (set to NaN)
+            command = np.array([phi_c, np.nan, np.nan, np.nan, np.nan, np.nan])
             viz.add_data(time, uav.get_state(), control, command=command)
 
         # Progress display
