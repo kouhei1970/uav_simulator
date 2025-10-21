@@ -13,14 +13,44 @@
 
 ## 機体モデル
 
+### プリセット機体モデル
+
 4種類の固定翼UAVモデルを用意しています:
 
-| モデル名 | 翼幅 | 質量 | 用途 |
-|---------|------|------|------|
-| **micro** | 0.8m | 0.5kg | 超小型（屋内用） |
-| **small** | 1.6m | 1.7kg | 小型（目標機体） |
-| **medium** | 2.9m | 11.0kg | 中型（Rascalクラス） |
-| **large** | 4.0m | 20.0kg | 大型（長時間飛行用） |
+| モデル名 | 翼幅 | 質量 | 安定性 | 用途 |
+|---------|------|------|--------|------|
+| **micro** | 0.8m | 0.5kg | 安定 | 超小型（屋内用） |
+| **small** | **1.6m** | **1.7kg** | **安定** | **小型（目標機体、デフォルト）** |
+| **medium** | 2.9m | 11.0kg | 安定 | 中型（Rascalクラス） |
+| **large** | 4.0m | 20.0kg | 安定 | 大型（長時間飛行用） |
+
+### 安定性バリエーション
+
+小型UAV（1.6m, 1.7kg）の安定性バリエーションを用意:
+
+| モデル名 | ロール安定性 | ピッチ安定性 | ヨー安定性 | 用途 |
+|---------|------------|------------|-----------|------|
+| **small** | 安定 | 安定 | 安定 | 標準機体（デフォルト） |
+| **small_slightly_unstable** | やや不安定 | やや不安定 | 中立 | 中程度の制御課題 |
+| **small_unstable** | 不安定 | 不安定 | 不安定 | 高度な制御課題 |
+
+### カスタム機体生成
+
+`aircraft_generator.py`を使用して、任意のパラメータで機体を生成可能:
+
+```python
+from src.aircraft_generator import create_aircraft
+
+# 翼幅2.0m、質量3.0kgでピッチがやや不安定な機体
+aircraft_params, aero_params = create_aircraft(
+    wingspan=2.0,
+    mass=3.0,
+    roll_stability='stable',
+    pitch_stability='slightly_unstable',
+    yaw_stability='stable',
+    aspect_ratio=10.0
+)
+```
 
 ## 必要なパッケージ
 
@@ -33,17 +63,24 @@ pip install numpy scipy matplotlib
 ```
 uav_simulator/
 ├── src/
-│   ├── dynamics.py        # 航空機動力学モデル
-│   ├── aerodynamics.py    # 空力モデル
-│   ├── controller.py      # 制御則
-│   ├── guidance.py        # 誘導則
-│   └── visualization.py   # 可視化ツール
-├── examples/
-│   ├── basic_flight.py    # 基本飛行シミュレーション
-│   ├── waypoint_nav.py    # 経路点航法
-│   └── orbit_flight.py    # 旋回飛行
+│   ├── dynamics.py            # 航空機動力学モデル
+│   ├── aerodynamics.py        # 空力モデル
+│   ├── controller.py          # 制御則
+│   ├── guidance.py            # 誘導則
+│   ├── visualization.py       # 可視化ツール
+│   └── aircraft_generator.py  # 機体生成モジュール
 ├── config/
-│   └── aircraft_params.py # 機体パラメータ
+│   └── aircraft_params.py     # 機体パラメータ定義
+├── examples/
+│   ├── basic_flight.py        # 基本飛行シミュレーション
+│   ├── waypoint_nav.py        # 経路点航法
+│   ├── orbit_flight.py        # 旋回飛行
+│   ├── small_uav_demo.py      # 小型UAVデモ
+│   └── compare_aircraft.py    # 機体比較シミュレーション
+├── docs/
+│   └── requirements.md        # 要件定義書
+├── test_sim.py                # 基本動作確認
+├── test_aircraft_models.py    # 機体モデル確認
 └── README.md
 ```
 

@@ -407,19 +407,70 @@ def get_large_uav_aero_params():
     return params
 
 
+def get_small_uav_slightly_unstable_aero_params():
+    """
+    小型UAV（やや不安定）の空力パラメータ
+
+    ピッチとロールがやや不安定
+    """
+    params = get_small_uav_aero_params().copy()
+
+    # ロール：やや不安定
+    params['C_l_beta'] = 0.03   # 正の値で不安定傾向
+    params['C_l_p'] = -0.15     # ダンピング減少
+
+    # ピッチ：やや不安定
+    params['C_m_alpha'] = 0.05  # 正の値で不安定傾向
+    params['C_m_q'] = -1.5      # ダンピング減少
+
+    # ヨー：中立
+    params['C_n_beta'] = 0.05
+    params['C_n_r'] = -0.15
+
+    return params
+
+
+def get_small_uav_unstable_aero_params():
+    """
+    小型UAV（不安定）の空力パラメータ
+
+    全軸が不安定
+    """
+    params = get_small_uav_aero_params().copy()
+
+    # ロール：不安定
+    params['C_l_beta'] = 0.10   # 強い不安定傾向
+    params['C_l_p'] = -0.05     # 弱いダンピング
+
+    # ピッチ：不安定
+    params['C_m_alpha'] = 0.15  # 強い不安定傾向
+    params['C_m_q'] = -0.5      # 弱いダンピング
+
+    # ヨー：不安定
+    params['C_n_beta'] = -0.15  # 負の値で不安定
+    params['C_n_r'] = -0.05     # 弱いダンピング
+
+    return params
+
+
 # 便利関数
 def get_aircraft_params(aircraft_type='small'):
     """
     機体タイプに応じたパラメータを取得
 
     パラメータ:
-        aircraft_type: 'small', 'medium', 'micro', 'large'
+        aircraft_type: 'small', 'medium', 'micro', 'large',
+                      'small_slightly_unstable', 'small_unstable'
 
     戻り値:
         (aircraft_params, aero_params): 機体パラメータと空力パラメータのタプル
     """
     if aircraft_type == 'small':
         return get_small_uav_params(), get_small_uav_aero_params()
+    elif aircraft_type == 'small_slightly_unstable':
+        return get_small_uav_params(), get_small_uav_slightly_unstable_aero_params()
+    elif aircraft_type == 'small_unstable':
+        return get_small_uav_params(), get_small_uav_unstable_aero_params()
     elif aircraft_type == 'medium':
         return get_medium_uav_params(), get_medium_uav_aero_params()
     elif aircraft_type == 'micro':
@@ -441,10 +492,21 @@ def print_aircraft_info(aircraft_type='small'):
     print(f"平均翼弦長: {aircraft_params['c']:.3f} m")
     print(f"アスペクト比: {aircraft_params['b']**2 / aircraft_params['S_wing']:.2f}")
     print(f"プロペラ面積: {aircraft_params['S_prop']:.4f} m^2")
+
+    # 安定性情報
+    print(f"安定性微係数:")
+    print(f"  C_l_beta (ロール): {aero_params['C_l_beta']:.3f} (負で安定)")
+    print(f"  C_m_alpha (ピッチ): {aero_params['C_m_alpha']:.3f} (負で安定)")
+    print(f"  C_n_beta (ヨー): {aero_params['C_n_beta']:.3f} (正で安定)")
     print()
 
 
 if __name__ == "__main__":
     # 全ての機体情報を表示
+    print("基本機体モデル:")
     for aircraft_type in ['micro', 'small', 'medium', 'large']:
+        print_aircraft_info(aircraft_type)
+
+    print("\n安定性バリエーション（小型UAV）:")
+    for aircraft_type in ['small', 'small_slightly_unstable', 'small_unstable']:
         print_aircraft_info(aircraft_type)
