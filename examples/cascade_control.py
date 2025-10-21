@@ -135,13 +135,13 @@ def main():
             psi_c = np.deg2rad(-45)
 
         # Compute cascade control for all 3 axes
-        delta_a, delta_e_cascade, delta_r_cascade, p_c, q_c, r_c = controller.compute_control(
+        delta_a, delta_e_cascade, delta_r, p_c, q_c, r_c = controller.compute_control(
             uav, phi_c, theta_c, psi_c, dt
         )
 
-        # For now: Only use cascade control for roll, keep pitch/yaw at trim
-        delta_e = elevator_trim
-        delta_r = 0.0
+        # Current stable configuration: Roll and yaw cascade control
+        # Pitch requires airspeed control for stability
+        delta_e = elevator_trim  # Elevator at trim (pitch at trim)
 
         # Use trim throttle (no speed control in this demo)
         delta_t = throttle_trim

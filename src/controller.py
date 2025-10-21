@@ -206,34 +206,34 @@ class CascadeAttitudeController:
 
         # ピッチ角制御用PID (アウターループ)
         self.pitch_angle_controller = PIDController(
-            kp=0.3,
-            ki=0.0,
-            kd=0.05,
-            limit=(-0.5, 0.5)  # ピッチレート指令制限 [rad/s]
+            kp=1.2,
+            ki=0.03,
+            kd=0.25,
+            limit=(-1.0, 1.0)  # ピッチレート指令制限 [rad/s]
         )
 
         # ピッチレート制御用PID (インナーループ)
         self.pitch_rate_controller = PIDController(
-            kp=0.08,
-            ki=0.005,
-            kd=0.015,
-            limit=(-0.25, 0.25)  # エレベータ制限 [rad]
+            kp=0.04,
+            ki=0.0,
+            kd=0.008,
+            limit=(-0.12, 0.12)  # エレベータ制限 [rad]
         )
 
         # ヨー角制御用PID (アウターループ)
         self.yaw_angle_controller = PIDController(
-            kp=0.5,
-            ki=0.02,
-            kd=0.1,
-            limit=(-1.0, 1.0)  # ヨーレート指令制限 [rad/s]
+            kp=3.0,
+            ki=0.1,
+            kd=0.6,
+            limit=(-2.0, 2.0)  # ヨーレート指令制限 [rad/s]
         )
 
         # ヨーレート制御用PID (インナーループ)
         self.yaw_rate_controller = PIDController(
-            kp=0.08,
-            ki=0.005,
-            kd=0.015,
-            limit=(-0.4, 0.4)  # ラダー制限 [rad]
+            kp=0.12,
+            ki=0.01,
+            kd=0.025,
+            limit=(-0.5, 0.5)  # ラダー制限 [rad]
         )
 
     def compute_control(self, uav, phi_c, theta_c, psi_c, dt):
