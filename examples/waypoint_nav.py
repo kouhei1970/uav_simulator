@@ -39,7 +39,7 @@ def main():
 
     # Initialize UAV
     uav = FixedWingUAV()
-    uav.set_state([0, 0, -100, 25, 0, 0, 0, 0, 0, 0, 0, 0])
+    uav.set_state([0, 0, -100, 15, 0, 0, 0, 0, 0, 0, 0, 0])
 
     # Aerodynamic model
     aero = AerodynamicModel()
@@ -51,13 +51,13 @@ def main():
 
     # Initialize guidance laws
     waypoint_guidance = WaypointGuidance(waypoints, R_min=50.0)
-    turn_guidance = CoordinatedTurnGuidance(V_a=25.0)
+    turn_guidance = CoordinatedTurnGuidance(V_a=15.0)
 
     # Visualization
     viz = SimulationVisualizer()
 
     # Set target values
-    Va_c = 25.0  # Target airspeed [m/s]
+    Va_c = 15.0  # Target airspeed [m/s]
 
     # Simulation loop
     time = 0.0

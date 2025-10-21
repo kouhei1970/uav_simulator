@@ -58,8 +58,8 @@ uav = FixedWingUAV(params=custom_params)
 Set the complete state vector.
 
 ```python
-# Set initial state: position (0,0,-100m), velocity 20 m/s forward, level attitude
-uav.set_state([0, 0, -100, 20, 0, 0, 0, 0, 0, 0, 0, 0])
+# Set initial state: position (0,0,-100m), velocity 15 m/s forward, level attitude
+uav.set_state([0, 0, -100, 15, 0, 0, 0, 0, 0, 0, 0, 0])
 ```
 
 #### set_control(control)
@@ -168,8 +168,8 @@ from src.aerodynamics import AerodynamicModel
 uav = FixedWingUAV(aircraft_type='small')
 aero = AerodynamicModel(aircraft_type='small')
 
-# Set initial state: 100m altitude, 20 m/s airspeed
-uav.set_state([0, 0, -100, 20, 0, 0, 0, 0, 0, 0, 0, 0])
+# Set initial state: 100m altitude, 15 m/s airspeed
+uav.set_state([0, 0, -100, 15, 0, 0, 0, 0, 0, 0, 0, 0])
 
 # Simulation loop
 dt = 0.01  # 10ms time step

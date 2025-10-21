@@ -35,8 +35,8 @@ def simulate_aircraft(aircraft_type, target_altitude=-100.0, target_speed=None, 
     # Set target speed based on aircraft size
     if target_speed is None:
         speed_map = {
-            'micro': 15.0,
-            'small': 20.0,
+            'micro': 12.0,
+            'small': 15.0,
             'medium': 25.0,
             'large': 30.0
         }

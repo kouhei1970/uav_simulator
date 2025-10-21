@@ -25,19 +25,19 @@ def main():
     T_sim = 120.0  # Simulation time [s]
 
     # Orbit parameters
-    orbit_center = np.array([500, 500, -150])  # Orbit center [m]
-    orbit_radius = 200.0  # Orbit radius [m]
+    orbit_center = np.array([300, 300, -100])  # Orbit center [m]
+    orbit_radius = 50.0  # Orbit radius [m] (optimal range for small UAV: 30-100m)
     orbit_direction = 'CW'  # Orbit direction (CW: clockwise, CCW: counter-clockwise)
 
     print(f"Orbit center: North={orbit_center[0]}m, East={orbit_center[1]}m, Altitude={-orbit_center[2]}m")
-    print(f"Orbit radius: {orbit_radius}m")
+    print(f"Orbit radius: {orbit_radius}m (optimal range for small UAV: 30-100m)")
     print(f"Orbit direction: {orbit_direction}")
 
     # Initialize UAV
     uav = FixedWingUAV()
     # Start from outside the orbit circle
-    initial_pos = orbit_center + np.array([orbit_radius + 100, 0, 0])
-    uav.set_state([initial_pos[0], initial_pos[1], initial_pos[2], 25, 0, 0, 0, 0, 0, 0, 0, 0])
+    initial_pos = orbit_center + np.array([orbit_radius + 50, 0, 0])
+    uav.set_state([initial_pos[0], initial_pos[1], initial_pos[2], 15, 0, 0, 0, 0, 0, 0, 0, 0])
 
     # Aerodynamic model
     aero = AerodynamicModel()
@@ -49,13 +49,13 @@ def main():
 
     # Initialize guidance laws
     orbit_guidance = OrbitGuidance(orbit_center, orbit_radius, direction=orbit_direction)
-    turn_guidance = CoordinatedTurnGuidance(V_a=25.0)
+    turn_guidance = CoordinatedTurnGuidance(V_a=15.0)
 
     # Visualization
     viz = SimulationVisualizer()
 
     # Set target values
-    Va_c = 25.0  # Target airspeed [m/s]
+    Va_c = 15.0  # Target airspeed [m/s]
 
     # Simulation loop
     time = 0.0

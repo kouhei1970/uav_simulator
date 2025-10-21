@@ -34,6 +34,9 @@ def get_small_uav_params():
         'k_T_P': 0.0,          # プロペラ推力係数
         'k_Omega': 0.0,        # プロペラ回転数係数
 
+        # 飛行性能
+        'V_cruise': 15.0,      # 巡航速度 [m/s]
+
         # 環境
         'rho': 1.225,          # 空気密度 [kg/m^3]
         'gravity': 9.81,       # 重力加速度 [m/s^2]
@@ -137,6 +140,9 @@ def get_medium_uav_params():
         'k_T_P': 0.0,          # プロペラ推力係数
         'k_Omega': 0.0,        # プロペラ回転数係数
 
+        # 飛行性能
+        'V_cruise': 25.0,      # 巡航速度 [m/s]
+
         # 環境
         'rho': 1.225,          # 空気密度 [kg/m^3]
         'gravity': 9.81,       # 重力加速度 [m/s^2]
@@ -236,6 +242,9 @@ def get_micro_uav_params():
         'k_T_P': 0.0,          # プロペラ推力係数
         'k_Omega': 0.0,        # プロペラ回転数係数
 
+        # 飛行性能
+        'V_cruise': 12.0,      # 巡航速度 [m/s]
+
         # 環境
         'rho': 1.225,          # 空気密度 [kg/m^3]
         'gravity': 9.81,       # 重力加速度 [m/s^2]
@@ -334,6 +343,9 @@ def get_large_uav_params():
         'k_motor': 100.0,      # モーター定数
         'k_T_P': 0.0,          # プロペラ推力係数
         'k_Omega': 0.0,        # プロペラ回転数係数
+
+        # 飛行性能
+        'V_cruise': 30.0,      # 巡航速度 [m/s]
 
         # 環境
         'rho': 1.225,          # 空気密度 [kg/m^3]
@@ -492,6 +504,7 @@ def print_aircraft_info(aircraft_type='small'):
     print(f"平均翼弦長: {aircraft_params['c']:.3f} m")
     print(f"アスペクト比: {aircraft_params['b']**2 / aircraft_params['S_wing']:.2f}")
     print(f"プロペラ面積: {aircraft_params['S_prop']:.4f} m^2")
+    print(f"巡航速度: {aircraft_params['V_cruise']:.1f} m/s")
 
     # 安定性情報
     print(f"安定性微係数:")

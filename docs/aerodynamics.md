@@ -184,7 +184,7 @@ uav = FixedWingUAV(aircraft_type='small')
 aero = AerodynamicModel(aircraft_type='small')
 
 # Set flight condition
-uav.set_state([0, 0, -100, 20, 0, 0, 0, 0.1, 0, 0, 0, 0])  # 20 m/s, 0.1 rad pitch
+uav.set_state([0, 0, -100, 15, 0, 0, 0, 0.1, 0, 0, 0, 0])  # 15 m/s, 0.1 rad pitch
 
 # Control inputs: [elevator, aileron, rudder, throttle]
 control = np.array([0.05, 0.0, 0.0, 0.6])

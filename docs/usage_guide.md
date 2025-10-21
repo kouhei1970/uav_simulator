@@ -57,7 +57,7 @@ python examples/basic_flight.py
 This will:
 1. Initialize a small UAV (1.6m wingspan, 1.7kg)
 2. Command it to climb from 100m to 150m altitude
-3. Maintain 25 m/s airspeed
+3. Maintain 15 m/s airspeed (cruise speed for small UAV)
 4. Display 3D trajectory and time series plots
 
 ### Understanding the Output
@@ -88,8 +88,8 @@ airspeed_ctrl = AirspeedController()
 viz = SimulationVisualizer()
 
 # Set initial state: [pn, pe, pd, u, v, w, phi, theta, psi, p, q, r]
-# Starting at 100m altitude, 20 m/s airspeed, level attitude
-uav.set_state([0, 0, -100, 20, 0, 0, 0, 0, 0, 0, 0, 0])
+# Starting at 100m altitude, 15 m/s airspeed, level attitude
+uav.set_state([0, 0, -100, 15, 0, 0, 0, 0, 0, 0, 0, 0])
 
 # Simulation parameters
 dt = 0.01  # 10ms time step
@@ -97,7 +97,7 @@ T_sim = 60.0  # 60 seconds
 
 # Target values
 h_c = -100.0  # Maintain 100m altitude (negative in NED)
-Va_c = 20.0   # Maintain 20 m/s airspeed
+Va_c = 15.0   # Maintain 15 m/s airspeed (small UAV cruise speed)
 phi_c = 0.0   # Keep wings level
 
 # Main simulation loop

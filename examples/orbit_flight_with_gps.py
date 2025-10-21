@@ -34,14 +34,14 @@ def main():
     T_sim = 180.0  # Simulation time [s] - longer to see orbit stability
 
     # True orbit parameters (what we want to achieve)
-    orbit_center_true = np.array([500, 500, -150])  # True orbit center [m]
-    orbit_radius = 200.0  # Desired orbit radius [m]
+    orbit_center_true = np.array([300, 300, -100])  # True orbit center [m]
+    orbit_radius = 50.0  # Desired orbit radius [m] (30-100m range for small UAV)
     orbit_direction = 'CW'  # Orbit direction (CW: clockwise, CCW: counter-clockwise)
 
     print(f"\nTrue Orbit Parameters:")
     print(f"  Center: North={orbit_center_true[0]:.1f}m, East={orbit_center_true[1]:.1f}m, "
           f"Altitude={-orbit_center_true[2]:.1f}m")
-    print(f"  Radius: {orbit_radius:.1f}m")
+    print(f"  Radius: {orbit_radius:.1f}m (optimal range for small UAV: 30-100m)")
     print(f"  Direction: {orbit_direction}")
 
     # GPS sensor configuration
@@ -72,11 +72,11 @@ def main():
         window_size=15              # Use 15 recent measurements (3 seconds at 5 Hz)
     )
 
-    # Initialize UAV
+    # Initialize UAV (small type with 15 m/s cruise speed)
     uav = FixedWingUAV()
     # Start from outside the orbit circle
-    initial_pos = orbit_center_true + np.array([orbit_radius + 100, 0, 0])
-    uav.set_state([initial_pos[0], initial_pos[1], initial_pos[2], 25, 0, 0, 0, 0, 0, 0, 0, 0])
+    initial_pos = orbit_center_true + np.array([orbit_radius + 50, 0, 0])
+    uav.set_state([initial_pos[0], initial_pos[1], initial_pos[2], 15, 0, 0, 0, 0, 0, 0, 0, 0])
 
     # Aerodynamic model
     aero = AerodynamicModel()
@@ -89,7 +89,7 @@ def main():
     # Initialize guidance with TRUE center (will be updated with GPS measurements)
     orbit_center_estimated = orbit_center_true.copy()
     orbit_guidance = OrbitGuidance(orbit_center_estimated, orbit_radius, direction=orbit_direction)
-    turn_guidance = CoordinatedTurnGuidance(V_a=25.0)
+    turn_guidance = CoordinatedTurnGuidance(V_a=15.0)
 
     # Visualization
     viz = SimulationVisualizer()
@@ -107,7 +107,7 @@ def main():
     }
 
     # Set target values
-    Va_c = 25.0  # Target airspeed [m/s]
+    Va_c = 15.0  # Target airspeed [m/s] (cruise speed for small UAV)
 
     # Simulation loop
     time = 0.0

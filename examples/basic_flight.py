@@ -25,7 +25,7 @@ def main():
 
     # Initialize UAV
     uav = FixedWingUAV()
-    uav.set_state([0, 0, -100, 25, 0, 0, 0, 0, 0, 0, 0, 0])  # Initial state
+    uav.set_state([0, 0, -100, 15, 0, 0, 0, 0, 0, 0, 0, 0])  # Initial state
 
     # Aerodynamic model
     aero = AerodynamicModel()
@@ -40,7 +40,7 @@ def main():
 
     # Set target values
     h_c = -150.0  # Target altitude [m] (NED frame)
-    Va_c = 25.0   # Target airspeed [m/s]
+    Va_c = 15.0   # Target airspeed [m/s]
 
     # Simulation loop
     time = 0.0

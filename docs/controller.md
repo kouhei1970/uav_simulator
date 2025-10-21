@@ -152,7 +152,7 @@ Computes throttle setting to track commanded airspeed.
 - `delta_t`: Throttle setting [0-1]
 
 ```python
-Va_c = 25.0  # Command 25 m/s airspeed
+Va_c = 15.0  # Command 15 m/s airspeed (small UAV cruise speed)
 delta_t = airspeed_controller.compute_throttle_command(uav, Va_c, dt)
 ```
 
@@ -205,7 +205,7 @@ Computes both pitch and throttle commands simultaneously.
 
 ```python
 h_c = -150.0  # 150m altitude
-Va_c = 25.0   # 25 m/s airspeed
+Va_c = 15.0   # 15 m/s airspeed (small UAV cruise speed)
 theta_c, delta_t = tecs.compute_commands(uav, h_c, Va_c, dt)
 ```
 
@@ -285,12 +285,12 @@ attitude_controller = AttitudeController()
 altitude_controller = AltitudeController()
 airspeed_controller = AirspeedController()
 
-# Initial state: 100m altitude, 25 m/s airspeed
-uav.set_state([0, 0, -100, 25, 0, 0, 0, 0, 0, 0, 0, 0])
+# Initial state: 100m altitude, 15 m/s airspeed (small UAV)
+uav.set_state([0, 0, -100, 15, 0, 0, 0, 0, 0, 0, 0, 0])
 
 # Target values
 h_c = -150.0    # Climb to 150m
-Va_c = 25.0     # Maintain 25 m/s
+Va_c = 15.0     # Maintain 15 m/s (small UAV cruise speed)
 phi_c = 0.0     # Keep wings level
 
 # Simulation parameters

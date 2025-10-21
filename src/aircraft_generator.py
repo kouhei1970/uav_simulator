@@ -29,6 +29,7 @@ class AircraftGenerator:
                          pitch_stability=StabilityLevel.STABLE,
                          yaw_stability=StabilityLevel.STABLE,
                          aspect_ratio=9.0,
+                         cruise_speed=None,
                          name="custom"):
         """
         機体パラメータを生成
@@ -40,6 +41,7 @@ class AircraftGenerator:
             pitch_stability: ピッチ安定性
             yaw_stability: ヨー安定性
             aspect_ratio: アスペクト比 (デフォルト: 9.0)
+            cruise_speed: 巡航速度 [m/s] (Noneの場合は翼面荷重から自動計算)
             name: 機体名
 
         戻り値:
@@ -64,6 +66,17 @@ class AircraftGenerator:
         # モーター定数（質量ベース）
         k_motor = 20.0 + 20.0 * np.sqrt(mass)
 
+        # 巡航速度の推定（指定されていない場合）
+        if cruise_speed is None:
+            # 翼面荷重から巡航速度を推定
+            # V_cruise = sqrt((2 * W) / (rho * S * C_L_cruise))
+            # C_L_cruise ≈ 0.6 (typical cruise lift coefficient)
+            rho = 1.225  # kg/m^3
+            gravity = 9.81  # m/s^2
+            C_L_cruise = 0.6
+            wing_loading = (mass * gravity) / S_wing  # N/m^2
+            cruise_speed = np.sqrt((2 * wing_loading) / (rho * C_L_cruise))
+
         # 機体パラメータ
         aircraft_params = {
             'name': name,
@@ -79,6 +92,7 @@ class AircraftGenerator:
             'k_motor': k_motor,
             'k_T_P': 0.0,
             'k_Omega': 0.0,
+            'V_cruise': cruise_speed,
             'rho': 1.225,
             'gravity': 9.81,
         }
@@ -268,6 +282,7 @@ def create_aircraft(wingspan, mass,
                    pitch_stability='stable',
                    yaw_stability='stable',
                    aspect_ratio=9.0,
+                   cruise_speed=None,
                    name="custom"):
     """
     機体を簡単に生成する関数
@@ -278,7 +293,8 @@ def create_aircraft(wingspan, mass,
             mass=1.7,
             roll_stability='stable',
             pitch_stability='slightly_unstable',
-            yaw_stability='stable'
+            yaw_stability='stable',
+            cruise_speed=15.0
         )
 
     パラメータ:
@@ -288,6 +304,7 @@ def create_aircraft(wingspan, mass,
         pitch_stability: ピッチ安定性
         yaw_stability: ヨー安定性
         aspect_ratio: アスペクト比
+        cruise_speed: 巡航速度 [m/s] (Noneの場合は自動計算)
         name: 機体名
 
     戻り値:
@@ -301,6 +318,7 @@ def create_aircraft(wingspan, mass,
         pitch_stability=pitch_stability,
         yaw_stability=yaw_stability,
         aspect_ratio=aspect_ratio,
+        cruise_speed=cruise_speed,
         name=name
     )
 
@@ -321,6 +339,7 @@ if __name__ == "__main__":
     )
     print(f"  質量: {aircraft_params['mass']:.2f} kg")
     print(f"  翼幅: {aircraft_params['b']:.2f} m")
+    print(f"  巡航速度: {aircraft_params['V_cruise']:.1f} m/s")
     print(f"  C_l_beta: {aero_params['C_l_beta']:.3f} (負で安定)")
     print(f"  C_m_alpha: {aero_params['C_m_alpha']:.3f} (負で安定)")
     print(f"  C_n_beta: {aero_params['C_n_beta']:.3f} (正で安定)")

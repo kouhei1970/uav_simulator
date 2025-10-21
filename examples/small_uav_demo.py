@@ -40,7 +40,7 @@ def main():
 
     # Initialize small UAV
     uav = FixedWingUAV(aircraft_type='small')
-    uav.set_state([0, 0, -80, 20, 0, 0, 0, 0, 0, 0, 0, 0])
+    uav.set_state([0, 0, -80, 15, 0, 0, 0, 0, 0, 0, 0, 0])
 
     # Display aircraft specifications
     print(f"\nAircraft Specifications:")
@@ -48,6 +48,7 @@ def main():
     print(f"  Wingspan: {uav.params['b']:.2f} m")
     print(f"  Wing Area: {uav.params['S_wing']:.3f} m^2")
     print(f"  Aspect Ratio: {uav.params['b']**2 / uav.params['S_wing']:.2f}")
+    print(f"  Cruise Speed: {uav.params['V_cruise']:.1f} m/s")
 
     # Aerodynamic model
     aero = AerodynamicModel(aircraft_type='small')
@@ -59,13 +60,13 @@ def main():
 
     # Initialize guidance laws
     waypoint_guidance = WaypointGuidance(waypoints, R_min=40.0)  # Capture radius for small aircraft
-    turn_guidance = CoordinatedTurnGuidance(V_a=20.0)  # Cruise speed for small aircraft
+    turn_guidance = CoordinatedTurnGuidance(V_a=15.0)  # Cruise speed for small aircraft
 
     # Visualization
     viz = SimulationVisualizer()
 
     # Set target values
-    Va_c = 20.0  # Cruise speed appropriate for small aircraft [m/s]
+    Va_c = 15.0  # Cruise speed appropriate for small aircraft [m/s]
 
     # Simulation loop
     time = 0.0

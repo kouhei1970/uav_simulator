@@ -440,7 +440,11 @@ $$V_{a,c} = \text{一定}$$
 
 $$R_{min} = \frac{V_a^2}{g \tan(\phi_{max})}$$
 
-$V_a = 25$ m/s、$\phi_{max} = 45°$ の場合：
+小型UAV（$V_a = 15$ m/s、$\phi_{max} = 45°$）の場合：
+
+$$R_{min} \approx 23 \text{ m}$$
+
+中型UAV（$V_a = 25$ m/s、$\phi_{max} = 45°$）の場合：
 
 $$R_{min} \approx 64 \text{ m}$$
 

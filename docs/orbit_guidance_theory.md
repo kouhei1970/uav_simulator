@@ -440,7 +440,11 @@ The minimum orbit radius is constrained by:
 
 $$R_{min} = \frac{V_a^2}{g \tan(\phi_{max})}$$
 
-For $V_a = 25$ m/s and $\phi_{max} = 45°$:
+For small UAV with $V_a = 15$ m/s and $\phi_{max} = 45°$:
+
+$$R_{min} \approx 23 \text{ m}$$
+
+For medium UAV with $V_a = 25$ m/s and $\phi_{max} = 45°$:
 
 $$R_{min} \approx 64 \text{ m}$$
 
