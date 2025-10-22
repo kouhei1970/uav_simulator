@@ -34,11 +34,11 @@ def main():
     Va_trim = 15.0  # Target cruise speed for small UAV
     altitude_trim = -100.0
 
-    # Trim values calculated for 15 m/s cruise (small UAV)
-    # Required: C_L = 0.432, alpha = 1.89 deg, Thrust = 1.4 N
-    # Thrust model: f = 0.5*rho*S_prop*C_prop*((k_motor*dt)^2 - Va^2)
-    # For Va=15 m/s, required thrust~1.4N → delta_t ≈ 0.31
-    throttle_trim = 0.31  # Calculated throttle for sustained flight at 15 m/s
+    # Trim values optimized for 15 m/s cruise with minimal altitude change
+    # Determined through trim_search_fine.py:
+    # - Altitude change rate: -0.017 m/s (nearly zero)
+    # - Airspeed: 15.00 m/s (exact match)
+    throttle_trim = 0.305  # Optimized throttle for minimal altitude change at 15 m/s
     alpha_trim = np.deg2rad(1.9)  # Required angle of attack
     pitch_trim = np.deg2rad(5.0)  # Pitch = alpha + flight path angle (adjusted for level flight)
 
@@ -47,13 +47,10 @@ def main():
     u_trim = Va_trim * np.cos(alpha_trim)
     w_trim = Va_trim * np.sin(alpha_trim)
 
-    # Calculate elevator trim for pitch moment equilibrium
-    # C_m = C_m_0 + C_m_alpha*alpha + C_m_delta_e*delta_e = 0
-    # delta_e = -(C_m_0 + C_m_alpha*alpha) / C_m_delta_e
-    C_m_0 = -0.025
-    C_m_alpha = -0.50
-    C_m_delta_e = -0.55
-    elevator_trim = -(C_m_0 + C_m_alpha * alpha_trim) / C_m_delta_e
+    # Elevator trim optimized through trim search
+    # Previous calculation: -(C_m_0 + C_m_alpha*alpha) / C_m_delta_e ≈ -4.33 deg
+    # Optimized value from trim_search_fine.py: -3.95 deg
+    elevator_trim = np.deg2rad(-3.95)  # Optimized for minimal altitude change
 
     # Set initial state at trim condition
     uav.set_state([

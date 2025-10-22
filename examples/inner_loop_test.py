@@ -48,7 +48,7 @@ def main():
     C_m_alpha = aero.aero_params['C_m_alpha']
     C_m_delta_e = aero.aero_params['C_m_delta_e']
     elevator_trim = -(C_m_0 + C_m_alpha * alpha_trim) / C_m_delta_e
-    throttle_trim = 0.31
+    throttle_trim = 0.305  # Optimized trim for minimal altitude change at 15 m/s
 
     print(f"Trim conditions:")
     print(f"  Throttle: {throttle_trim:.3f}")

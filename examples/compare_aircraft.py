@@ -53,7 +53,7 @@ def simulate_aircraft(aircraft_type, target_altitude=-100.0, target_speed=None, 
     # Similar methodology to basic_flight.py
     trim_config = {
         'micro': {'throttle': 0.380, 'pitch': np.deg2rad(4.0), 'alpha': np.deg2rad(1.44)},
-        'small': {'throttle': 0.310, 'pitch': np.deg2rad(5.0), 'alpha': np.deg2rad(1.89)},
+        'small': {'throttle': 0.305, 'pitch': np.deg2rad(5.0), 'alpha': np.deg2rad(1.89)},  # Optimized for minimal altitude change
         'medium': {'throttle': 0.428, 'pitch': np.deg2rad(6.5), 'alpha': np.deg2rad(3.86)},
         'large': {'throttle': 0.394, 'pitch': np.deg2rad(5.0), 'alpha': np.deg2rad(1.90)}
     }
