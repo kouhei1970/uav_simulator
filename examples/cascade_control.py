@@ -89,14 +89,14 @@ def main():
 
     # Pitch cascade control (速度制御が必要)
     # Outer loop: Angle control
-    controller.pitch_angle_controller.kp = 0#1.2
+    controller.pitch_angle_controller.kp = 1.0#1.2
     controller.pitch_angle_controller.ki = 0#0.03
     controller.pitch_angle_controller.kd = 0#0.25
     controller.pitch_angle_controller.limit = (-1.0, 1.0)
 
     # Inner loop: Rate control
-    controller.pitch_rate_controller.kp = 0#0.04
-    controller.pitch_rate_controller.ki = 0#0.0
+    controller.pitch_rate_controller.kp = -0.005#0.04
+    controller.pitch_rate_controller.ki = -0.1#0.0
     controller.pitch_rate_controller.kd = 0#0.008
     controller.pitch_rate_controller.limit = (-0.12, 0.12)
 
@@ -136,13 +136,13 @@ def main():
     print("Starting cascade control simulation...")
     print("Test sequence:")
     print("  0-10s:  Level flight (trim)")
-    print("  10-20s: Roll right 30 deg")
-    print("  20-30s: Roll left 30 deg")
+    print("  10-20s: Roll right 5 deg")
+    print("  20-30s: Roll left 5 deg")
     print("  30-40s: Return to level")
-    print("  40-50s: Pitch up 10 deg")
-    print("  50-60s: Pitch down 10 deg")
-    print("  60-70s: Yaw right 45 deg")
-    print("  70-80s: Yaw left 45 deg")
+    print("  40-50s: Pitch up 5 deg")
+    print("  50-60s: Pitch down 5 deg")
+    print("  60-70s: Yaw right 5 deg")
+    print("  70-80s: Yaw left 5 deg")
     print()
 
     # Simulation loop
@@ -171,25 +171,25 @@ def main():
             theta_c = theta_trim
             psi_c = 0.0
         elif time < 50.0:
-            # Pitch up 10 degrees
+            # Pitch up 5 degrees
             phi_c = 0.0
-            theta_c = theta_trim + np.deg2rad(10)
+            theta_c = theta_trim + np.deg2rad(5)
             psi_c = 0.0
         elif time < 60.0:
-            # Pitch down 10 degrees
+            # Pitch down 5 degrees
             phi_c = 0.0
-            theta_c = theta_trim - np.deg2rad(10)
+            theta_c = theta_trim - np.deg2rad(5)
             psi_c = 0.0
         elif time < 70.0:
-            # Yaw right 45 degrees
+            # Yaw right 5 degrees
             phi_c = 0.0
             theta_c = theta_trim
-            psi_c = np.deg2rad(45)
+            psi_c = np.deg2rad(5)
         else:
-            # Yaw left 45 degrees
+            # Yaw left 5 degrees
             phi_c = 0.0
             theta_c = theta_trim
-            psi_c = np.deg2rad(-45)
+            psi_c = np.deg2rad(-5)
 
         # Compute cascade control for all 3 axes
         delta_a, delta_e_increment, delta_r, p_c, q_c, r_c = controller.compute_control(
