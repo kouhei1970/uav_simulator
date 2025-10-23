@@ -68,6 +68,62 @@ def main():
     # Initialize cascade attitude controller
     controller = CascadeAttitudeController()
 
+    # ============================================================
+    # Cascade PID Gain Settings (チューニング用)
+    # ============================================================
+    print("Configuring cascade PID gains...")
+
+    # Roll cascade control (安定)
+    # Outer loop: Angle control
+    controller.roll_angle_controller.kp = 5.0
+    controller.roll_angle_controller.ki = 0.2
+    controller.roll_angle_controller.kd = 0.8
+    controller.roll_angle_controller.limit = (-2.0, 2.0)
+
+    # Inner loop: Rate control
+    controller.roll_rate_controller.kp = 0.15
+    controller.roll_rate_controller.ki = 0.01
+    controller.roll_rate_controller.kd = 0.02
+    controller.roll_rate_controller.limit = (-0.4, 0.4)
+
+    # Pitch cascade control (速度制御が必要)
+    # Outer loop: Angle control
+    controller.pitch_angle_controller.kp = 1.2
+    controller.pitch_angle_controller.ki = 0.03
+    controller.pitch_angle_controller.kd = 0.25
+    controller.pitch_angle_controller.limit = (-1.0, 1.0)
+
+    # Inner loop: Rate control
+    controller.pitch_rate_controller.kp = 0.04
+    controller.pitch_rate_controller.ki = 0.0
+    controller.pitch_rate_controller.kd = 0.008
+    controller.pitch_rate_controller.limit = (-0.12, 0.12)
+
+    # Yaw cascade control (安定)
+    # Outer loop: Angle control
+    controller.yaw_angle_controller.kp = 3.0
+    controller.yaw_angle_controller.ki = 0.1
+    controller.yaw_angle_controller.kd = 0.6
+    controller.yaw_angle_controller.limit = (-2.0, 2.0)
+
+    # Inner loop: Rate control
+    controller.yaw_rate_controller.kp = 0.12
+    controller.yaw_rate_controller.ki = 0.01
+    controller.yaw_rate_controller.kd = 0.025
+    controller.yaw_rate_controller.limit = (-0.5, 0.5)
+
+    print("  Roll:  Outer(Kp={:.1f}, Ki={:.2f}, Kd={:.1f})  Inner(Kp={:.2f}, Ki={:.3f}, Kd={:.3f})".format(
+        controller.roll_angle_controller.kp, controller.roll_angle_controller.ki, controller.roll_angle_controller.kd,
+        controller.roll_rate_controller.kp, controller.roll_rate_controller.ki, controller.roll_rate_controller.kd))
+    print("  Pitch: Outer(Kp={:.1f}, Ki={:.2f}, Kd={:.2f})  Inner(Kp={:.2f}, Ki={:.3f}, Kd={:.3f})".format(
+        controller.pitch_angle_controller.kp, controller.pitch_angle_controller.ki, controller.pitch_angle_controller.kd,
+        controller.pitch_rate_controller.kp, controller.pitch_rate_controller.ki, controller.pitch_rate_controller.kd))
+    print("  Yaw:   Outer(Kp={:.1f}, Ki={:.1f}, Kd={:.1f})  Inner(Kp={:.2f}, Ki={:.2f}, Kd={:.3f})".format(
+        controller.yaw_angle_controller.kp, controller.yaw_angle_controller.ki, controller.yaw_angle_controller.kd,
+        controller.yaw_rate_controller.kp, controller.yaw_rate_controller.ki, controller.yaw_rate_controller.kd))
+    print()
+    # ============================================================
+
     # Initialize visualizer
     viz = SimulationVisualizer()
 
