@@ -110,7 +110,7 @@ class SimulationVisualizer:
         times = np.array(self.time_history)
         states = np.array(self.state_history)
 
-        fig, axes = plt.subplots(4, 3, figsize=(15, 12))
+        fig, axes = plt.subplots(4, 3, figsize=(15, 10))
 
         # Position
         axes[0, 0].plot(times, states[:, 0])
@@ -312,7 +312,7 @@ class SimulationVisualizer:
         alpha_arr = np.rad2deg(np.array(alpha_list))
         beta_arr = np.rad2deg(np.array(beta_list))
 
-        fig, axes = plt.subplots(3, 1, figsize=(10, 9))
+        fig, axes = plt.subplots(3, 1, figsize=(10, 8))
 
         # Airspeed
         axes[0].plot(times, Va_arr)
