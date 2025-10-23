@@ -184,10 +184,20 @@ class CascadeAttitudeController:
     ロール、ピッチ、ヨーの3軸すべてでカスケード制御を実装:
     - アウターループ: 角度制御
     - インナーループ: 角速度制御
+
+    ピッチ制御の注意点:
+    - 目標ピッチ角theta_cはトリム値を含む絶対角度で指定
+    - エレベータ出力delta_eはトリムからの増減量として出力
     """
 
-    def __init__(self):
-        """カスケード姿勢制御器の初期化"""
+    def __init__(self, elevator_trim=0.0):
+        """カスケード姿勢制御器の初期化
+
+        パラメータ:
+            elevator_trim: トリムエレベータ舵角 [rad] (デフォルト: 0.0)
+        """
+        # トリムエレベータ舵角を保存
+        self.elevator_trim = elevator_trim
         # ロール角制御用PID (アウターループ)
         self.roll_angle_controller = PIDController(
             kp=5.0,
@@ -217,7 +227,7 @@ class CascadeAttitudeController:
             kp=0.04,
             ki=0.0,
             kd=0.008,
-            limit=(-0.12, 0.12)  # エレベータ制限 [rad]
+            limit=(-0.12, 0.12)  # トリムからのエレベータ増減制限 [rad]
         )
 
         # ヨー角制御用PID (アウターループ)
@@ -242,18 +252,22 @@ class CascadeAttitudeController:
 
         パラメータ:
             uav: FixedWingUAVオブジェクト
-            phi_c: 目標ロール角 [rad]
-            theta_c: 目標ピッチ角 [rad]
-            psi_c: 目標ヨー角 [rad]
+            phi_c: 目標ロール角 [rad] (絶対角度)
+            theta_c: 目標ピッチ角 [rad] (トリム値を含む絶対角度)
+            psi_c: 目標ヨー角 [rad] (絶対角度)
             dt: 時間ステップ [s]
 
         戻り値:
-            delta_a: エルロン偏角 [rad]
-            delta_e: エレベータ偏角 [rad]
-            delta_r: ラダー偏角 [rad]
+            delta_a: エルロン偏角 [rad] (絶対値)
+            delta_e: エレベータ偏角増分 [rad] (トリムからの増減量)
+            delta_r: ラダー偏角 [rad] (絶対値)
             p_c: 目標ロールレート [rad/s]
             q_c: 目標ピッチレート [rad/s]
             r_c: 目標ヨーレート [rad/s]
+
+        注意:
+            エレベータ出力delta_eはトリムからの増減量です。
+            実際の舵角は: elevator = self.elevator_trim + delta_e
         """
         # 現在の姿勢と角速度
         phi, theta, psi = uav.get_attitude()

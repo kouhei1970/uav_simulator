@@ -63,8 +63,8 @@ def main():
         0, 0, 0  # Angular velocity
     ])
 
-    # Initialize controller
-    controller = CascadeAttitudeController()
+    # Initialize controller with elevator trim
+    controller = CascadeAttitudeController(elevator_trim=elevator_trim)
 
     # Initialize visualizer
     viz = SimulationVisualizer()
@@ -129,7 +129,8 @@ def main():
         delta_a = controller.roll_rate_controller.update(p_error, dt)
 
         q_error = q_c - q
-        delta_e = controller.pitch_rate_controller.update(q_error, dt)
+        delta_e_increment = controller.pitch_rate_controller.update(q_error, dt)
+        delta_e = elevator_trim + delta_e_increment  # エレベータはトリムからの増減
 
         r_error = r_c - r
         delta_r = controller.yaw_rate_controller.update(r_error, dt)

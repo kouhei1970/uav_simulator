@@ -65,8 +65,9 @@ def main():
         0, 0, 0  # Angular velocity
     ])
 
-    # Initialize cascade attitude controller
-    controller = CascadeAttitudeController()
+    # Initialize cascade attitude controller with elevator trim
+    # エレベータのトリム値を渡すことで、PID出力がトリムからの増減量になる
+    controller = CascadeAttitudeController(elevator_trim=elevator_trim)
 
     # ============================================================
     # Cascade PID Gain Settings (チューニング用)
@@ -191,13 +192,14 @@ def main():
             psi_c = np.deg2rad(-45)
 
         # Compute cascade control for all 3 axes
-        delta_a, delta_e_cascade, delta_r, p_c, q_c, r_c = controller.compute_control(
+        delta_a, delta_e_increment, delta_r, p_c, q_c, r_c = controller.compute_control(
             uav, phi_c, theta_c, psi_c, dt
         )
 
-        # Current stable configuration: Roll and yaw cascade control
-        # Pitch requires airspeed control for stability
-        delta_e = elevator_trim  # Elevator at trim (pitch at trim)
+        # Apply elevator control
+        # delta_e_increment はトリムからの増減量なので、トリムに加算
+        # ピッチ制御が無効の場合(ゲイン=0)、delta_e_incrementは0になる
+        delta_e = elevator_trim + delta_e_increment
 
         # Use trim throttle (no speed control in this demo)
         delta_t = throttle_trim
