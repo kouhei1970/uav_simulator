@@ -78,7 +78,7 @@ class SimulationVisualizer:
         y = states[:, 1]
         z = -states[:, 2]  # Display altitude as positive
 
-        fig = plt.figure(figsize=(10, 8))
+        fig = plt.figure(figsize=(10, 7.2))
         ax = fig.add_subplot(111, projection='3d')
 
         # Plot trajectory
@@ -110,7 +110,7 @@ class SimulationVisualizer:
         times = np.array(self.time_history)
         states = np.array(self.state_history)
 
-        fig, axes = plt.subplots(4, 3, figsize=(15, 10))
+        fig, axes = plt.subplots(4, 3, figsize=(15, 9))
 
         # Position
         axes[0, 0].plot(times, states[:, 0])
@@ -249,7 +249,7 @@ class SimulationVisualizer:
         times = np.array(self.time_history)
         controls = np.array(self.control_history)
 
-        fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+        fig, axes = plt.subplots(2, 2, figsize=(12, 7.2))
 
         # Elevator
         axes[0, 0].plot(times, np.rad2deg(controls[:, 0]))
@@ -312,7 +312,7 @@ class SimulationVisualizer:
         alpha_arr = np.rad2deg(np.array(alpha_list))
         beta_arr = np.rad2deg(np.array(beta_list))
 
-        fig, axes = plt.subplots(3, 1, figsize=(10, 8))
+        fig, axes = plt.subplots(3, 1, figsize=(10, 7.2))
 
         # Airspeed
         axes[0].plot(times, Va_arr)
@@ -353,7 +353,7 @@ class SimulationVisualizer:
         x = states[:, 0]
         y = states[:, 1]
 
-        fig, ax = plt.subplots(figsize=(10, 10))
+        fig, ax = plt.subplots(figsize=(10, 9))
 
         # Plot trajectory
         ax.plot(x, y, 'b-', linewidth=2, label='Trajectory')
