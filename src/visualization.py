@@ -139,9 +139,22 @@ class SimulationVisualizer:
         axes[1, 1].set_title('Lateral Velocity')
         axes[1, 1].grid(True)
 
-        axes[1, 2].plot(times, states[:, 5])
-        axes[1, 2].set_ylabel('w [m/s]')
-        axes[1, 2].set_title('Vertical Velocity')
+        # Calculate altitude rate (NED frame z-velocity) from state
+        # z_dot = sin(theta) * u + (-sin(phi) * cos(theta)) * v + (-cos(phi) * cos(theta)) * w
+        altitude_rates = []
+        for state in states:
+            u, v, w = state[3:6]
+            phi, theta, psi = state[6:9]
+            z_dot = (np.sin(theta) * u +
+                    (-np.sin(phi) * np.cos(theta)) * v +
+                    (-np.cos(phi) * np.cos(theta)) * w)
+            altitude_rates.append(-z_dot)  # Negative because down is positive in NED
+
+        axes[1, 2].plot(times, altitude_rates, 'b-', label='Altitude rate (NED)')
+        axes[1, 2].plot(times, states[:, 5], 'r--', alpha=0.5, label='w (body frame)')
+        axes[1, 2].set_ylabel('Altitude rate [m/s]')
+        axes[1, 2].set_title('Altitude Rate')
+        axes[1, 2].legend()
         axes[1, 2].grid(True)
 
         # Check if command data is available
