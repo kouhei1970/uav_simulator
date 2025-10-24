@@ -89,15 +89,15 @@ def main():
 
     # Pitch cascade control (速度制御が必要)
     # Outer loop: Angle control
-    controller.pitch_angle_controller.kp = 1.0#1.2
+    controller.pitch_angle_controller.kp = 5.0#1.2
     controller.pitch_angle_controller.ki = 0#0.03
     controller.pitch_angle_controller.kd = 0#0.25
     controller.pitch_angle_controller.limit = (-1.0, 1.0)
 
     # Inner loop: Rate control
-    controller.pitch_rate_controller.kp = -0.005#0.04
-    controller.pitch_rate_controller.ki = -0.1#0.0
-    controller.pitch_rate_controller.kd = 0#0.008
+    controller.pitch_rate_controller.kp = 10.0  # 0.04
+    controller.pitch_rate_controller.ki = 1.0   # 0.0
+    controller.pitch_rate_controller.kd = 0.0   # 0.008
     controller.pitch_rate_controller.limit = (-0.12, 0.12)
 
     # Yaw cascade control (安定)
@@ -108,7 +108,7 @@ def main():
     controller.yaw_angle_controller.limit = (-2.0, 2.0)
 
     # Inner loop: Rate control
-    controller.yaw_rate_controller.kp = 0#0.12
+    controller.yaw_rate_controller.kp = -0.2#0.12
     controller.yaw_rate_controller.ki = 0#0.01
     controller.yaw_rate_controller.kd = 0#0.025
     controller.yaw_rate_controller.limit = (-0.5, 0.5)
