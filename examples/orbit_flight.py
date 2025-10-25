@@ -172,13 +172,15 @@ def main():
         # Pitch angle command: use altitude controller or trim pitch based on switch
         if enable_altitude_control:
             # Use altitude controller to compute pitch angle command for maintaining altitude
-            theta_c_base = altitude_controller.compute_pitch_command(uav, h_c, dt)
+            # Altitude controller output is increment from trim, so add to trim pitch
+            theta_c_increment = altitude_controller.compute_pitch_command(uav, h_c, dt)
+            theta_c_base = pitch_trim + theta_c_increment
 
             # Compensate for bank angle to maintain altitude during orbit
             # During banked flight, need higher pitch angle due to reduced vertical lift component
             # Lift vertical component = L * cos(phi), so need pitch compensation
             # Note: Altitude controller feedback can compensate, so coefficient can be small
-            theta_compensation = theta_c_base * (1.0 / np.cos(phi) - 1.0) * 0.3
+            theta_compensation = pitch_trim * (1.0 / np.cos(phi) - 1.0) * 0.3
             theta_c = theta_c_base + theta_compensation
         else:
             # Use trim pitch with bank angle compensation
