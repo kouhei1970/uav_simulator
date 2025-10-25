@@ -10,31 +10,35 @@ import numpy as np
 class PIDController:
     """基本的なPIDコントローラ"""
 
-    def __init__(self, kp=0.0, ki=0.0, kd=0.0, limit=None):
+    def __init__(self, kp=0.0, ki=0.0, kd=0.0, limit=None, derivative_on_measurement=False):
         """
         パラメータ:
             kp: 比例ゲイン
             ki: 積分ゲイン
             kd: 微分ゲイン
             limit: 出力の制限 (min, max)のタプル
+            derivative_on_measurement: 微分先行型PID (True: 測定値の微分を使用, False: 誤差の微分を使用)
         """
         self.kp = kp
         self.ki = ki
         self.kd = kd
         self.limit = limit
+        self.derivative_on_measurement = derivative_on_measurement
 
         # 内部状態
         self.integrator = 0.0
         self.error_prev = 0.0
+        self.measurement_prev = 0.0
         self.differentiator = 0.0
 
-    def update(self, error, dt):
+    def update(self, error, dt, measurement=None):
         """
         PID制御の更新
 
         パラメータ:
-            error: 誤差
+            error: 誤差 (目標値 - 測定値)
             dt: 時間ステップ [s]
+            measurement: 測定値 (微分先行型PIDの場合に必要)
 
         戻り値:
             u: 制御入力
@@ -47,9 +51,20 @@ class PIDController:
         integral = self.ki * self.integrator
 
         # 微分項
-        if dt > 0:
-            self.differentiator = (error - self.error_prev) / dt
-        derivative = self.kd * self.differentiator
+        if self.derivative_on_measurement:
+            # 微分先行型: 測定値の微分を使用 (微分キックを防ぐ)
+            if measurement is None:
+                raise ValueError("measurement must be provided when derivative_on_measurement=True")
+            if dt > 0:
+                self.differentiator = (measurement - self.measurement_prev) / dt
+            # 測定値の増加は制御出力を減らす方向なので負符号
+            derivative = -self.kd * self.differentiator
+            self.measurement_prev = measurement
+        else:
+            # 従来型: 誤差の微分を使用
+            if dt > 0:
+                self.differentiator = (error - self.error_prev) / dt
+            derivative = self.kd * self.differentiator
 
         # 制御入力
         u = proportional + integral + derivative
@@ -66,6 +81,7 @@ class PIDController:
         """PIDの内部状態をリセット"""
         self.integrator = 0.0
         self.error_prev = 0.0
+        self.measurement_prev = 0.0
         self.differentiator = 0.0
 
 
@@ -190,20 +206,23 @@ class CascadeAttitudeController:
     - エレベータ出力delta_eはトリムからの増減量として出力
     """
 
-    def __init__(self, elevator_trim=0.0):
+    def __init__(self, elevator_trim=0.0, derivative_on_measurement=False):
         """カスケード姿勢制御器の初期化
 
         パラメータ:
             elevator_trim: トリムエレベータ舵角 [rad] (デフォルト: 0.0)
+            derivative_on_measurement: 微分先行型PID (True: 測定値の微分を使用, False: 誤差の微分を使用)
         """
         # トリムエレベータ舵角を保存
         self.elevator_trim = elevator_trim
+        self.derivative_on_measurement = derivative_on_measurement
         # ロール角制御用PID (アウターループ)
         self.roll_angle_controller = PIDController(
             kp=5.0,
             ki=0.2,
             kd=0.8,
-            limit=(-2.0, 2.0)  # ロールレート指令制限 [rad/s]
+            limit=(-2.0, 2.0),  # ロールレート指令制限 [rad/s]
+            derivative_on_measurement=derivative_on_measurement
         )
 
         # ロールレート制御用PID (インナーループ)
@@ -211,7 +230,8 @@ class CascadeAttitudeController:
             kp=0.15,
             ki=0.01,
             kd=0.02,
-            limit=(-0.4, 0.4)  # エルロン制限 [rad]
+            limit=(-0.4, 0.4),  # エルロン制限 [rad]
+            derivative_on_measurement=derivative_on_measurement
         )
 
         # ピッチ角制御用PID (アウターループ)
@@ -219,7 +239,8 @@ class CascadeAttitudeController:
             kp=1.2,
             ki=0.03,
             kd=0.25,
-            limit=(-1.0, 1.0)  # ピッチレート指令制限 [rad/s]
+            limit=(-1.0, 1.0),  # ピッチレート指令制限 [rad/s]
+            derivative_on_measurement=derivative_on_measurement
         )
 
         # ピッチレート制御用PID (インナーループ)
@@ -227,7 +248,8 @@ class CascadeAttitudeController:
             kp=0.04,
             ki=0.0,
             kd=0.008,
-            limit=(-0.12, 0.12)  # トリムからのエレベータ増減制限 [rad]
+            limit=(-0.12, 0.12),  # トリムからのエレベータ増減制限 [rad]
+            derivative_on_measurement=derivative_on_measurement
         )
 
         # ヨー角制御用PID (アウターループ)
@@ -235,7 +257,8 @@ class CascadeAttitudeController:
             kp=3.0,
             ki=0.1,
             kd=0.6,
-            limit=(-2.0, 2.0)  # ヨーレート指令制限 [rad/s]
+            limit=(-2.0, 2.0),  # ヨーレート指令制限 [rad/s]
+            derivative_on_measurement=derivative_on_measurement
         )
 
         # ヨーレート制御用PID (インナーループ)
@@ -243,7 +266,8 @@ class CascadeAttitudeController:
             kp=0.12,
             ki=0.01,
             kd=0.025,
-            limit=(-0.5, 0.5)  # ラダー制限 [rad]
+            limit=(-0.5, 0.5),  # ラダー制限 [rad]
+            derivative_on_measurement=derivative_on_measurement
         )
 
     def compute_control(self, uav, phi_c, theta_c, psi_c, dt):
@@ -276,29 +300,47 @@ class CascadeAttitudeController:
         # ロール角カスケード制御
         # アウターループ: 角度誤差 → 目標角速度
         phi_error = self._wrap_angle(phi_c - phi)
-        p_c = self.roll_angle_controller.update(phi_error, dt)
+        if self.derivative_on_measurement:
+            p_c = self.roll_angle_controller.update(phi_error, dt, measurement=phi)
+        else:
+            p_c = self.roll_angle_controller.update(phi_error, dt)
 
         # インナーループ: 角速度誤差 → 舵角
         p_error = p_c - p
-        delta_a = self.roll_rate_controller.update(p_error, dt)
+        if self.derivative_on_measurement:
+            delta_a = self.roll_rate_controller.update(p_error, dt, measurement=p)
+        else:
+            delta_a = self.roll_rate_controller.update(p_error, dt)
 
         # ピッチ角カスケード制御
         # アウターループ: 角度誤差 → 目標角速度
         theta_error = self._wrap_angle(theta_c - theta)
-        q_c = self.pitch_angle_controller.update(theta_error, dt)
+        if self.derivative_on_measurement:
+            q_c = self.pitch_angle_controller.update(theta_error, dt, measurement=theta)
+        else:
+            q_c = self.pitch_angle_controller.update(theta_error, dt)
 
         # インナーループ: 角速度誤差 → 舵角
         q_error = q_c - q
-        delta_e = self.pitch_rate_controller.update(q_error, dt)
+        if self.derivative_on_measurement:
+            delta_e = self.pitch_rate_controller.update(q_error, dt, measurement=q)
+        else:
+            delta_e = self.pitch_rate_controller.update(q_error, dt)
 
         # ヨー角カスケード制御
         # アウターループ: 角度誤差 → 目標角速度
         psi_error = self._wrap_angle(psi_c - psi)
-        r_c = self.yaw_angle_controller.update(psi_error, dt)
+        if self.derivative_on_measurement:
+            r_c = self.yaw_angle_controller.update(psi_error, dt, measurement=psi)
+        else:
+            r_c = self.yaw_angle_controller.update(psi_error, dt)
 
         # インナーループ: 角速度誤差 → 舵角
         r_error = r_c - r
-        delta_r = self.yaw_rate_controller.update(r_error, dt)
+        if self.derivative_on_measurement:
+            delta_r = self.yaw_rate_controller.update(r_error, dt, measurement=r)
+        else:
+            delta_r = self.yaw_rate_controller.update(r_error, dt)
 
         return delta_a, delta_e, delta_r, p_c, q_c, r_c
 

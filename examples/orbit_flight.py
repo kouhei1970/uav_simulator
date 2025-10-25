@@ -26,6 +26,7 @@ def main():
 
     # Control switches
     enable_altitude_control = True  # Enable/disable altitude control (True: use AltitudeController, False: use trim pitch)
+    use_derivative_on_measurement = True  # PID type (True: derivative-on-PV, False: conventional derivative-on-error)
 
     # Orbit parameters
     orbit_center = np.array([300, 300, -100])  # Orbit center [m]
@@ -36,6 +37,7 @@ def main():
     print(f"Orbit radius: {orbit_radius}m (optimal range for small UAV: 30-100m)")
     print(f"Orbit direction: {orbit_direction}")
     print(f"Altitude control: {'ENABLED' if enable_altitude_control else 'DISABLED (using trim pitch)'}")
+    print(f"PID type: {'Derivative-on-Measurement (微分先行型)' if use_derivative_on_measurement else 'Derivative-on-Error (従来型)'}")
 
     # Initialize UAV
     uav = FixedWingUAV()
@@ -82,8 +84,11 @@ def main():
     # Throttle trim for orbit flight - fine-tuned for minimal altitude change
     throttle_trim = 0.305  # Optimized for minimal altitude loss during orbit (same as level flight)
 
-    # Initialize cascade attitude controller with elevator trim (same as cascade_control.py)
-    controller = CascadeAttitudeController(elevator_trim=elevator_trim)
+    # Initialize cascade attitude controller with elevator trim and PID type
+    controller = CascadeAttitudeController(
+        elevator_trim=elevator_trim,
+        derivative_on_measurement=use_derivative_on_measurement
+    )
 
     # Initialize altitude controller for orbit flight
     altitude_controller = AltitudeController()
