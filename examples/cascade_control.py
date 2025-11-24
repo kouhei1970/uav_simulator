@@ -94,10 +94,10 @@ def main():
     controller.pitch_angle_controller.kd = 0#0.25
     controller.pitch_angle_controller.limit = (-1.0, 1.0)
 
-    # Inner loop: Rate control
-    controller.pitch_rate_controller.kp = 10.0  # 0.04
-    controller.pitch_rate_controller.ki = 1.0   # 0.0
-    controller.pitch_rate_controller.kd = 0.0   # 0.008
+    # Inner loop: Rate control (デフォルト値を使用: kp=0.04, ki=0.0, kd=0.008)
+    # controller.pitch_rate_controller.kp = 0.04  # デフォルト値
+    # controller.pitch_rate_controller.ki = 0.0   # デフォルト値
+    # controller.pitch_rate_controller.kd = 0.008 # デフォルト値
     controller.pitch_rate_controller.limit = (-0.12, 0.12)
 
     # Yaw cascade control (安定)

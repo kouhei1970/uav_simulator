@@ -42,7 +42,7 @@ def test_trim(elevator_deg, throttle, sim_time=30.0):
     w_trim = Va_trim * np.sin(alpha_trim)
 
     uav.set_state([
-        0, 0, -100,  # Position: 100m altitude
+        0, 0, 0,  # Position: 100m altitude
         u_trim, 0, w_trim,  # Velocity
         0, theta_trim, 0,  # Attitude
         0, 0, 0  # Angular velocity
@@ -97,8 +97,8 @@ def main():
     print()
 
     # Search ranges
-    elevator_range = np.linspace(-6.0, -2.0, 9)  # -6 to -2 degrees
-    throttle_range = np.linspace(0.25, 0.40, 7)  # 0.25 to 0.40
+    elevator_range = np.linspace(-6.0, 0.0, 20)  # -6 to 9 degrees
+    throttle_range = np.linspace(0.25, 0.40, 20)  # 0.25 to 0.40
 
     print(f"Testing {len(elevator_range)} elevator values × {len(throttle_range)} throttle values")
     print(f"Elevator range: {elevator_range[0]:.1f} to {elevator_range[-1]:.1f} deg")

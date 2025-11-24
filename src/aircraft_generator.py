@@ -154,7 +154,7 @@ class AircraftGenerator:
             'C_L_0': C_L_0,
             'C_L_alpha': C_L_alpha,
             'C_L_q': 0.0,
-            'C_L_delta_e': -0.36 - 0.04 * (aspect_ratio - 9.0) / 9.0,
+            'C_L_delta_e': 0.36 + 0.04 * (aspect_ratio - 9.0) / 9.0,
 
             # 抗力係数
             'C_D_0': C_D_0,
@@ -168,7 +168,7 @@ class AircraftGenerator:
             'C_Y_p': 0.0,
             'C_Y_r': 0.0,
             'C_Y_delta_a': 0.0,
-            'C_Y_delta_r': -0.20,
+            'C_Y_delta_r': 0.20,
 
             # ローリングモーメント係数（ロール安定性）
             'C_l_0': 0.0,

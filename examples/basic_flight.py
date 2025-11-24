@@ -31,16 +31,16 @@ def main():
 
     # Set up trim condition for stable level flight at 15 m/s
     print("Setting up trim condition for level flight at 15 m/s...")
-    Va_trim = 15.0  # Target cruise speed for small UAV
+    Va_trim = 16.84  # Target cruise speed for small UAV
     altitude_trim = -100.0
 
     # Trim values optimized for 15 m/s cruise with minimal altitude change
     # Determined through trim_search_fine.py:
     # - Altitude change rate: -0.017 m/s (nearly zero)
     # - Airspeed: 15.00 m/s (exact match)
-    throttle_trim = 0.305  # Optimized throttle for minimal altitude change at 15 m/s
-    alpha_trim = np.deg2rad(1.9)  # Required angle of attack
-    pitch_trim = np.deg2rad(5.0)  # Pitch = alpha + flight path angle (adjusted for level flight)
+    throttle_trim = 0.337  # Optimized throttle for minimal altitude change at 15 m/s
+    alpha_trim = np.deg2rad(0.860)  # Required angle of attack
+    pitch_trim = np.deg2rad(0.952)  # Pitch = alpha + flight path angle (adjusted for level flight)
 
     # Calculate velocity components for desired angle of attack
     # alpha = arctan(w/u), so w = u * tan(alpha)
@@ -50,7 +50,7 @@ def main():
     # Elevator trim optimized through trim search
     # Previous calculation: -(C_m_0 + C_m_alpha*alpha) / C_m_delta_e ≈ -4.33 deg
     # Optimized value from trim_search_fine.py: -3.95 deg
-    elevator_trim = np.deg2rad(-3.95)  # Optimized for minimal altitude change
+    elevator_trim = np.deg2rad(-3.47)  # Optimized for minimal altitude change
 
     # Set initial state at trim condition
     uav.set_state([
